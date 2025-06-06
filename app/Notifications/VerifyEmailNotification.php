@@ -1,0 +1,55 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Notifications;
+
+use Carbon\Carbon;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Notifications\Messages\MailMessage;
+use Illuminate\Notifications\Notification;
+use Illuminate\Support\Facades\URL;
+
+final class VerifyEmailNotification extends Notification
+{
+    use Queueable;
+
+    /**
+     * @param object $notifiable
+     * @return string[]
+     */
+    public function via(object $notifiable): array
+    {
+        return ['mail'];
+    }
+
+    /**
+     * @param object $notifiable
+     * @return MailMessage
+     */
+    public function toMail(object $notifiable): MailMessage
+    {
+        $verifyUrl = $this->verificationUrl($notifiable);
+
+        return (new MailMessage)
+            ->subject(__('email.subject'))
+            ->view('emails.verify-email', [
+                'user' => $notifiable,
+                'verifyUrl' => $verifyUrl,
+                'userName' => $notifiable->name
+            ]);
+    }
+
+    protected function verificationUrl($notifiable): string
+    {
+        return URL::temporarySignedRoute(
+            'auth.verification.verify',
+            Carbon::now()->addMinutes(60),
+            [
+                'id' => $notifiable->getKey(),
+                'hash' => sha1($notifiable->getEmailForVerification()),
+            ]
+        );
+    }
+}

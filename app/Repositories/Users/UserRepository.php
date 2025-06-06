@@ -6,7 +6,9 @@ namespace App\Repositories\Users;
 
 use App\Exceptions\DuplicateException;
 use App\Http\Dto\Request\Auth\RegisterDto;
+use App\Jobs\SendVerificationEmailJob;
 use App\Models\User;
+use App\Notifications\VerifyEmailNotification;
 use Exception;
 
 final class UserRepository implements UserRepositoryInterface
@@ -26,6 +28,10 @@ final class UserRepository implements UserRepositoryInterface
             throw new DuplicateException('email');
         }
 
-        return $this->model->create($registerData->toArray());
+        $user = $this->model->create($registerData->toArray());
+
+        dispatch(new SendVerificationEmailJob($user))->onQueue('emails');
+
+        return $user;
     }
 }

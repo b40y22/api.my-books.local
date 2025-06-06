@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'duplicate' => 'Поле :attribute вже існує.',
     'firstname' => [
         'required' => 'Поле "Ім\'я" є обов\'язковим.',
         'string' => 'Поле "Ім\'я" повинно бути рядком.',
