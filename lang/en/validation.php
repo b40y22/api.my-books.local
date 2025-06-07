@@ -1,7 +1,6 @@
 <?php
 
 return [
-    'duplicate' => 'The :attribute field must be a valid email address.',
     'firstname' => [
         'required' => 'The firstname field is required.',
         'string' => 'The firstname field must be a string.',

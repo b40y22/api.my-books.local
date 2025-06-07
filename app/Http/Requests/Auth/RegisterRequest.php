@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Auth;
 
 use App\Http\Requests\BaseFormRequest;
+use App\Rules\UserExist;
 
 final class RegisterRequest extends BaseFormRequest
 {
@@ -11,7 +12,7 @@ final class RegisterRequest extends BaseFormRequest
         return [
             'firstname' => 'required|string',
             'lastname' => 'nullable|string',
-            'email' => 'required|email|unique:users,email',
+            'email' => ['required', 'email', new UserExist() ],
             'password' => 'required|string|confirmed|min:8',
         ];
     }
