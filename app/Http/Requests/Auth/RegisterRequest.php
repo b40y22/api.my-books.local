@@ -12,7 +12,7 @@ final class RegisterRequest extends BaseFormRequest
         return [
             'firstname' => 'required|string',
             'lastname' => 'nullable|string',
-            'email' => ['required', 'email', new UserExist() ],
+            'email' => ['required', 'email', new UserExist],
             'password' => 'required|string|confirmed|min:8',
         ];
     }

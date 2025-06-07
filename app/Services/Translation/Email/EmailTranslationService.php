@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\Translation\Email;
 
 use App\Exceptions\NotFoundException;
-use Illuminate\Support\Str;
 
 class EmailTranslationService implements EmailTranslationServiceInterface
 {
@@ -37,7 +36,7 @@ class EmailTranslationService implements EmailTranslationServiceInterface
         return array_key_exists($emailType, $emailTranslations);
     }
 
-    function localeExists(string $locale): bool
+    public function localeExists(string $locale): bool
     {
         $langPath = base_path("lang/{$locale}");
 

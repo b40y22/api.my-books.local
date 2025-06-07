@@ -9,15 +9,10 @@ use App\Exceptions\ValidationException;
 use App\Models\User;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
-use Illuminate\Http\Response;
 
 final class UserExist implements ValidationRule
 {
     /**
-     * @param string $attribute
-     * @param mixed $value
-     * @param Closure $fail
-     * @return void
      * @throws ValidationException
      */
     public function validate(string $attribute, mixed $value, Closure $fail): void

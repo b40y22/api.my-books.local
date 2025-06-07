@@ -11,7 +11,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
@@ -22,9 +21,13 @@ class SendVerificationEmailJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public User $user;
+
     public int $tries = 3;
+
     public int $timeout = 60;
+
     public int $backoff = 10;
+
     public array $translations;
 
     public function __construct(User $user, array $translations)
@@ -46,12 +49,12 @@ class SendVerificationEmailJob implements ShouldQueue
             'user' => $this->user,
             'verifyUrl' => $verifyUrl,
             'userName' => $this->user->name ?? 'User',
-            'translations' => $this->translations
+            'translations' => $this->translations,
         ];
 
         Mail::send('emails.verify-email', $data, function ($message) {
-                $message->to($this->user->email)->subject(__('email.subject'));
-            }
+            $message->to($this->user->email)->subject(__('email.subject'));
+        }
         );
     }
 

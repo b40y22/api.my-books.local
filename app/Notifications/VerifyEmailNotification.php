@@ -6,7 +6,6 @@ namespace App\Notifications;
 
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
@@ -16,7 +15,6 @@ final class VerifyEmailNotification extends Notification
     use Queueable;
 
     /**
-     * @param object $notifiable
      * @return string[]
      */
     public function via(object $notifiable): array
@@ -24,10 +22,6 @@ final class VerifyEmailNotification extends Notification
         return ['mail'];
     }
 
-    /**
-     * @param object $notifiable
-     * @return MailMessage
-     */
     public function toMail(object $notifiable): MailMessage
     {
         $verifyUrl = $this->verificationUrl($notifiable);
@@ -37,7 +31,7 @@ final class VerifyEmailNotification extends Notification
             ->view('emails.verify-email', [
                 'user' => $notifiable,
                 'verifyUrl' => $verifyUrl,
-                'userName' => $notifiable->name
+                'userName' => $notifiable->name,
             ]);
     }
 

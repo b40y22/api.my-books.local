@@ -15,7 +15,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
     public function __construct(
         private readonly EmailTranslationServiceInterface $emailTranslationService
     ) {
-        parent::__construct(new User());
+        parent::__construct(new User);
     }
 
     public function store(RegisterDto $registerData): User

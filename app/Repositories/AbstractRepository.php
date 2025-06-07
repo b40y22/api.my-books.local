@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Repositories;
 
-use App\Repositories\AbstractRepositoryInterface;
 use Illuminate\Database\Eloquent\Model;
 
 abstract class AbstractRepository implements AbstractRepositoryInterface
