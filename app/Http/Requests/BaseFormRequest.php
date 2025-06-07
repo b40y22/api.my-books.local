@@ -8,7 +8,7 @@ use App\Http\Dto\Request\BaseDto;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
-use Illuminate\Http\Response;
+use Symfony\Component\HttpFoundation\Response;
 
 abstract class BaseFormRequest extends FormRequest
 {
