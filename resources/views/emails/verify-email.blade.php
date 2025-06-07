@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config('app.name') }} - {{__('email.subject')}}</title>
+    <title>{{ config('app.name') }} - {{ $translations['subject'] }}</title>
     <style>
         * {
             margin: 0;
@@ -171,38 +171,37 @@
     <div class="email-container">
         <div class="header">
             <div class="logo"></div>
-            <h1>{{__('email.logo.h1')}}</h1>
-            <p>{{__('email.logo.p')}}</p>
+            <h1>{{ $translations['logo']['h1'] }}</h1>
+            <p>{{ $translations['logo']['p'] }}</p>
         </div>
-
         <div class="content">
-            <div class="greeting">{{__('email.content.greeting')}}</div>
+            <div class="greeting">{{ $translations['content']['greeting'] }}</div>
 
             <div class="message">
-                {{__('email.content.message', ['attribute' => config('app.name')])}}
+                {{ str_replace(':attribute',  config('app.name'), $translations['content']['message']) }}
             </div>
 
             <div class="button-container">
-                <a href="{{ $verifyUrl }}" class="verify-button">{{__('email.content.button-container')}}</a>
+                <a href="{{  $verifyUrl }}" class="verify-button">{{ $translations['content']['button-container'] }}</a>
             </div>
 
             <div class="alternative-text">
-                {{__('email.content.greeting')}}<br>
+                {{ $translations['content']['greeting'] }}<br>
                 <a href="{{ $verifyUrl }}" class="alternative-link">{{ $verifyUrl }}</a>
             </div>
 
             <div class="message" style="margin-top: 30px; font-size: 14px;">
-                {{__('email.content.message-second')}}
-            </div>
+                {{ $translations['content']['message-second'] }}
+            </div>`
         </div>
 
         <div class="footer">
             <div class="footer-text">
-                {{__('email.footer.footer-text.first')}},<br>
-                {{__('email.footer.footer-text.second')}} <span class="company-name">{{ config('app.name') }}</span>
+                {{ $translations['footer']['footer-text']['first'] }},<br>
+                {{ $translations['footer']['footer-text']['second'] }} <span class="company-name">{{ config('app.name') }}</span>
             </div>
             <div class="copyright">
-                © {{ date('Y') }} {{__('email.copyright')}}
+                © {{ date('Y') }} {{ $translations['copyright'] }}
             </div>
         </div>
     </div>

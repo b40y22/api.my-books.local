@@ -9,12 +9,14 @@ use App\Http\Dto\Request\Auth\RegisterDto;
 use App\Jobs\SendVerificationEmailJob;
 use App\Models\User;
 use App\Notifications\VerifyEmailNotification;
+use App\Services\Translation\Email\EmailTranslationServiceInterface;
 use Exception;
 
 final class UserRepository implements UserRepositoryInterface
 {
     public function __construct(
-        public User $model
+        public User $model,
+        private EmailTranslationServiceInterface $emailTranslationService
     ) {}
 
     /**
@@ -30,7 +32,9 @@ final class UserRepository implements UserRepositoryInterface
 
         $user = $this->model->create($registerData->toArray());
 
-        dispatch(new SendVerificationEmailJob($user))->onQueue('emails');
+        $translations = $this->emailTranslationService->getEmailTranslations('register', $registerData->locale);
+
+        dispatch(new SendVerificationEmailJob($user, $translations))->onQueue('emails');
 
         return $user;
     }

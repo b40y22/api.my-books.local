@@ -15,7 +15,7 @@ final class NotFoundException extends Exception
     public function __construct(
         protected $message
     ) {
-        parent::__construct('Not found');
+        parent::__construct($message ?? 'Not found');
     }
 
     public function render(): JsonResponse

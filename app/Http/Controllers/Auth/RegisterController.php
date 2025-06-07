@@ -18,11 +18,10 @@ final class RegisterController extends Controller
 
     public function __invoke(RegisterRequest $request): JsonResponse
     {
-        $userDto = $request->validatedDTO(RegisterDto::class);
-        $user = $this->userService->store($userDto);
+        $userDto = RegisterDto::fromRequest($request);
 
         return $this->created(
-            $user->toArray()
+            $this->userService->store($userDto)->toArray()
         );
     }
 }
