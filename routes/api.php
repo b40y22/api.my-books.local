@@ -10,7 +10,7 @@ Route::name('auth.')->prefix('auth')->group(function () {
     Route::post('register', [RegisterController::class, '__invoke'])
         ->name('register');
 
-    Route::get('/verify-email/{id}/{hash}', [EmailVerificationController::class, 'verify'])
+    Route::get('/verify-email/{id}/{hash}', [EmailVerificationController::class, '__invoke'])
         ->middleware(['signed'])
         ->name('verification.verify');
 });
