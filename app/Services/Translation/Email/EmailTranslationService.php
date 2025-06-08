@@ -4,20 +4,21 @@ declare(strict_types=1);
 
 namespace App\Services\Translation\Email;
 
-use App\Exceptions\Error;
 use App\Exceptions\NotFoundException;
+use Illuminate\Support\Facades\Log;
 
 class EmailTranslationService implements EmailTranslationServiceInterface
 {
     /**
+     * @param string $emailType
+     * @param string $locale
+     * @return array
      * @throws NotFoundException
      */
     public function getEmailTranslations(string $emailType, string $locale): array
     {
         if (! $this->localeExists($locale)) {
-            throw new NotFoundException(
-                new Error("Locale [{$locale}] not found.")
-            );
+            throw new NotFoundException("Locale [{$locale}] not found.");
         }
 
         $currentLocale = app()->getLocale();
@@ -25,9 +26,8 @@ class EmailTranslationService implements EmailTranslationServiceInterface
 
         if (! $this->getAvailableEmailTypes($emailType)) {
             app()->setLocale($currentLocale);
-            throw new NotFoundException(
-                new Error("Email translations not found for type [{$emailType}].")
-            );
+
+            throw new NotFoundException("Email translations not found for type [{$emailType}].");
         }
 
         return __("email.{$emailType}");

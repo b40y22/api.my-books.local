@@ -4,17 +4,14 @@ declare(strict_types=1);
 
 namespace App\Repositories\Users;
 
+use App\Events\Auth\UserRegistered;
 use App\Http\Dto\Request\Auth\RegisterDto;
-use App\Jobs\SendVerificationEmailJob;
 use App\Models\User;
 use App\Repositories\AbstractRepository;
-use App\Services\Translation\Email\EmailTranslationServiceInterface;
 
 final class UserRepository extends AbstractRepository implements UserRepositoryInterface
 {
-    public function __construct(
-        private readonly EmailTranslationServiceInterface $emailTranslationService
-    ) {
+    public function __construct() {
         parent::__construct(new User);
     }
 
@@ -22,9 +19,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
     {
         $user = $this->model->create($registerData->toArray());
 
-        $translations = $this->emailTranslationService->getEmailTranslations('register', $registerData->locale);
-
-        dispatch(new SendVerificationEmailJob($user, $translations))->onQueue('emails');
+        event(new UserRegistered($user, $registerData->locale));
 
         return $user;
     }

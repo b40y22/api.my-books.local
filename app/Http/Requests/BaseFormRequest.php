@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\Exceptions\Error;
 use App\Exceptions\ValidationException;
 use App\Http\Dto\Request\BaseDto;
 use Illuminate\Contracts\Validation\Validator;
@@ -26,9 +25,7 @@ abstract class BaseFormRequest extends FormRequest
      */
     protected function failedValidation(Validator $validator): void
     {
-        throw new ValidationException(
-            new Error($validator->errors()->all())
-        );
+        throw new ValidationException($validator->errors()->all());
     }
 
     public function validatedDTO(string $dto): BaseDto
