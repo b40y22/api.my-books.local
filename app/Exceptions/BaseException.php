@@ -9,10 +9,12 @@ use Illuminate\Http\JsonResponse;
 
 class BaseException extends Exception
 {
+    private int $statusCode = 500;
+
     public function __construct(
-        protected TrackableError $error
+        private readonly Error $error
     ) {
-        parent::__construct($this->error->getErrorMessage());
+        parent::__construct();
     }
 
     public function render(): JsonResponse

@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
+use App\Exceptions\Error;
+use App\Exceptions\ValidationException;
 use App\Http\Dto\Request\BaseDto;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -17,13 +19,15 @@ abstract class BaseFormRequest extends FormRequest
         return true;
     }
 
+    /**
+     * @param Validator $validator
+     * @return void
+     * @throws ValidationException
+     */
     protected function failedValidation(Validator $validator): void
     {
-        throw new HttpResponseException(
-            response()->json([
-                'data' => [],
-                'errors' => $validator->errors()->all(),
-            ], Response::HTTP_UNPROCESSABLE_ENTITY)
+        throw new ValidationException(
+            new Error($validator->errors()->all())
         );
     }
 

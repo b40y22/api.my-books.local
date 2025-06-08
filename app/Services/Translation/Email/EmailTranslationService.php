@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Translation\Email;
 
+use App\Exceptions\Error;
 use App\Exceptions\NotFoundException;
 
 class EmailTranslationService implements EmailTranslationServiceInterface
@@ -14,7 +15,9 @@ class EmailTranslationService implements EmailTranslationServiceInterface
     public function getEmailTranslations(string $emailType, string $locale): array
     {
         if (! $this->localeExists($locale)) {
-            throw new NotFoundException("Locale [{$locale}] not found.");
+            throw new NotFoundException(
+                new Error("Locale [{$locale}] not found.")
+            );
         }
 
         $currentLocale = app()->getLocale();
@@ -22,8 +25,9 @@ class EmailTranslationService implements EmailTranslationServiceInterface
 
         if (! $this->getAvailableEmailTypes($emailType)) {
             app()->setLocale($currentLocale);
-
-            throw new NotFoundException("Email translations not found for type [{$emailType}].");
+            throw new NotFoundException(
+                new Error("Email translations not found for type [{$emailType}].")
+            );
         }
 
         return __("email.{$emailType}");

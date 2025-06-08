@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Auth;
 
 use App\Exceptions\HttpRequestException;
-use App\Exceptions\TrackableError;
+use App\Exceptions\Error;
 use App\Exceptions\ValidationException;
 use App\Repositories\Users\UserRepository;
 use Illuminate\Http\Request;
@@ -23,7 +23,7 @@ final readonly class EmailVerificationService implements EmailVerificationServic
     public function verifyEmail(Request $request, int $userId, string $hash): array
     {
         if (! $request->hasValidSignature()) {
-            $error = new TrackableError(__('auth.invalid_verification_link'));
+            $error = new Error(__('auth.invalid_verification_link'));
 
             throw new HttpRequestException($error);
         }
@@ -31,7 +31,7 @@ final readonly class EmailVerificationService implements EmailVerificationServic
         $user = $this->userRepository->findOrFail($userId);
 
         if (! hash_equals($hash, sha1($user->getEmailForVerification()))) {
-            $error = new TrackableError(__('auth.invalid_verification_link'));
+            $error = new Error(__('auth.invalid_verification_link'));
 
             throw new ValidationException($error);
         }

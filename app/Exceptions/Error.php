@@ -7,12 +7,12 @@ namespace App\Exceptions;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-final class TrackableError
+final class Error
 {
     protected string $errorId;
 
     public function __construct(
-        private readonly string $errorMessage,
+        private readonly string|array $errorMessage,
     ) {
         $this->errorId = Str::uuid()->toString();
         $this->log();
@@ -23,15 +23,21 @@ final class TrackableError
         return $this->errorId;
     }
 
-    public function getErrorMessage(): string
+    public function getErrorMessage(): string|array
     {
         return $this->errorMessage;
     }
 
     public function getErrorForResponse(): array
     {
+        $errors = [];
+
+        if ($this->getErrorMessage()) {
+            $errors = is_array($this->errorMessage) ? $this->errorMessage : [$this->errorMessage];
+        }
+
         return [
-            'error-message' => [$this->getErrorMessage()],
+            'error-messages' => $errors,
             'error-id' => $this->getErrorId(),
         ];
     }
