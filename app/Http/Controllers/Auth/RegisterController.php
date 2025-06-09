@@ -13,12 +13,12 @@ use Illuminate\Http\JsonResponse;
 final class RegisterController extends Controller
 {
     public function __construct(
-        private RegisterServiceInterface $userService
+        private readonly RegisterServiceInterface $userService
     ) {}
 
     public function __invoke(RegisterRequest $request): JsonResponse
     {
-        $userDto = RegisterDto::fromRequest($request);
+        $userDto = $request->validatedDTO(RegisterDto::class);
 
         return $this->created(
             $this->userService->store($userDto)->toArray()

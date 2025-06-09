@@ -32,9 +32,4 @@ final class RegisterRequest extends BaseFormRequest
             'password.min' => __('validation.password.min'),
         ];
     }
-
-    public function getAcceptLanguage(): ?string
-    {
-        return $this->header('Accept-Language');
-    }
 }

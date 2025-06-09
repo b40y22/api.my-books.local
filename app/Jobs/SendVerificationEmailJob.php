@@ -28,12 +28,9 @@ final class SendVerificationEmailJob implements ShouldQueue
 
     public int $backoff = 10;
 
-    public array $translations;
-
-    public function __construct(User $user, array $translations)
+    public function __construct(User $user)
     {
         $this->user = $user;
-        $this->translations = $translations;
 
         $this->onQueue('emails');
     }
@@ -48,19 +45,12 @@ final class SendVerificationEmailJob implements ShouldQueue
         $data = [
             'user' => $this->user,
             'verifyUrl' => $verifyUrl,
-            'userName' => $this->user->name ?? 'User',
-            'translations' => $this->translations,
         ];
 
         Mail::send('emails.verify-email', $data, function ($message) {
             $message->to($this->user->email)->subject(__('email.subject'));
         }
         );
-    }
-
-    protected function determineUserLocale(): string
-    {
-        return request()->header('Accept-Language') ?? 'en';
     }
 
     /**

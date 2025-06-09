@@ -19,7 +19,7 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
     {
         $user = $this->model->create($registerData->toArray());
 
-        event(new UserRegistered($user, $registerData->locale));
+        event(new UserRegistered($user));
 
         return $user;
     }

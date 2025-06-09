@@ -14,11 +14,9 @@ final class UserRegistered
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     public User $user;
-    public string $locale;
 
-    public function __construct(User $user, string $locale)
+    public function __construct(User $user)
     {
         $this->user = $user;
-        $this->locale = $locale;
     }
 }

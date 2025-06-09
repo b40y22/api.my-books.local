@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ config('app.name') }} - {{ $translations['subject'] }}</title>
+    <title>{{ config('app.name') }} - Email Verification</title>
     <style>
         * {
             margin: 0;
@@ -168,42 +168,42 @@
     </style>
 </head>
 <body>
-    <div class="email-container">
-        <div class="header">
-            <div class="logo"></div>
-            <h1>{{ $translations['logo']['h1'] }}</h1>
-            <p>{{ $translations['logo']['p'] }}</p>
-        </div>
-        <div class="content">
-            <div class="greeting">{{ $translations['content']['greeting'] }}</div>
+<div class="email-container">
+    <div class="header">
+        <div class="logo"></div>
+        <h1>{{ config('app.name') }}</h1>
+        <p>Please verify your email address</p>
+    </div>
+    <div class="content">
+        <div class="greeting">Hello, {{ $user->name }}!</div>
 
-            <div class="message">
-                {{ str_replace(':attribute',  config('app.name'), $translations['content']['message']) }}
-            </div>
-
-            <div class="button-container">
-                <a href="{{  $verifyUrl }}" class="verify-button">{{ $translations['content']['button-container'] }}</a>
-            </div>
-
-            <div class="alternative-text">
-                {{ $translations['content']['greeting'] }}<br>
-                <a href="{{ $verifyUrl }}" class="alternative-link">{{ $verifyUrl }}</a>
-            </div>
-
-            <div class="message" style="margin-top: 30px; font-size: 14px;">
-                {{ $translations['content']['message-second'] }}
-            </div>`
+        <div class="message">
+            Thank you for registering with {{ config('app.name') }}. To complete your registration and activate your account, please verify your email address by clicking the button below:
         </div>
 
-        <div class="footer">
-            <div class="footer-text">
-                {{ $translations['footer']['footer-text']['first'] }},<br>
-                {{ $translations['footer']['footer-text']['second'] }} <span class="company-name">{{ config('app.name') }}</span>
-            </div>
-            <div class="copyright">
-                © {{ date('Y') }} {{ $translations['copyright'] }}
-            </div>
+        <div class="button-container">
+            <a href="{{ $verifyUrl }}" class="verify-button">Verify Email</a>
+        </div>
+
+        <div class="alternative-text">
+            If you cannot click the button, copy and paste this link into your browser:<br>
+            <a href="{{ $verifyUrl }}" class="alternative-link">{{ $verifyUrl }}</a>
+        </div>
+
+        <div class="message" style="margin-top: 30px; font-size: 14px;">
+            If you did not create an account, please ignore this email.
         </div>
     </div>
+
+    <div class="footer">
+        <div class="footer-text">
+            Best regards,<br>
+            Team <span class="company-name">{{ config('app.name') }}</span>
+        </div>
+        <div class="copyright">
+            © {{ date('Y') }} All rights reserved
+        </div>
+    </div>
+</div>
 </body>
 </html>
