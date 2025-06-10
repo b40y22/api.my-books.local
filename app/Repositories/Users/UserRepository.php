@@ -8,6 +8,7 @@ use App\Events\Auth\UserRegistered;
 use App\Http\Dto\Request\Auth\RegisterDto;
 use App\Models\User;
 use App\Repositories\AbstractRepository;
+use App\Services\RequestLogger;
 
 final class UserRepository extends AbstractRepository implements UserRepositoryInterface
 {
@@ -17,7 +18,16 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
 
     public function store(RegisterDto $registerData): User
     {
+        RequestLogger::addEvent('[repository] user_creation_started', [
+            'email' => $registerData->email
+        ]);
+
         $user = $this->model->create($registerData->toArray());
+
+        RequestLogger::addEvent('[repository] user_created_successfully', [
+            'user_id' => $user->id,
+            'email' => $user->email
+        ]);
 
         event(new UserRegistered($user));
 

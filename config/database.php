@@ -111,7 +111,17 @@ return [
             // 'encrypt' => env('DB_ENCRYPT', 'yes'),
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
-
+        'mongodb' => [
+            'driver' => 'mongodb',
+            'dsn' => env('MONGODB_DSN', 'mongodb://localhost:27017'),
+            'database' => env('MONGODB_DATABASE', 'requests'),
+            'options' => [
+                'connectTimeoutMS' => env('MONGODB_CONNECT_TIMEOUT', 3000),
+                'socketTimeoutMS' => env('MONGODB_SOCKET_TIMEOUT', 5000),
+                'maxPoolSize' => env('MONGODB_MAX_POOL_SIZE', 10),
+                'retryWrites' => env('MONGODB_RETRY_WRITES', true),
+            ],
+        ],
     ],
 
     /*
