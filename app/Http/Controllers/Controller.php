@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Services\RequestLogger;
 use Illuminate\Http\JsonResponse;
 
 abstract class Controller
@@ -23,8 +24,12 @@ abstract class Controller
 
     protected static function makeResponse(array $data, int $statusCode): JsonResponse
     {
+        $requestId = RequestLogger::getRequestId();
+
         return response()->json([
-            'data' => $data, 'errors' => [],
+            'data' => $data,
+            'errors' => [],
+            'request_id' => $requestId,
         ],
             $statusCode,
             [],

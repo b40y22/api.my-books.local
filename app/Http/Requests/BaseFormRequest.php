@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests;
 
 use App\Exceptions\ValidationException;
-use App\Http\Dto\Request\BaseDto;
+use App\Http\Dto\BaseDto;
 use App\Services\RequestLogger;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;

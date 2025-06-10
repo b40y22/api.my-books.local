@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Http\Dto\Request;
+namespace App\Http\Dto;
 
 abstract class BaseDto
 {
