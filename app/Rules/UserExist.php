@@ -27,7 +27,7 @@ final class UserExist implements ValidationRule
                 'attribute' => $attribute,
             ]);
 
-            throw new ValidationException(__('validation.email.unique'));
+            $fail(__('validation.email.unique'));
         }
     }
 }

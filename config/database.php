@@ -115,6 +115,7 @@ return [
             'driver' => 'mongodb',
             'dsn' => env('MONGODB_DSN', 'mongodb://localhost:27017'),
             'database' => env('MONGODB_DATABASE', 'requests'),
+            'request_tracking_collection' => env('MONGODB_REQUEST_TRACKING_COLLECTION', 'lifecycle'),
             'options' => [
                 'connectTimeoutMS' => env('MONGODB_CONNECT_TIMEOUT', 3000),
                 'socketTimeoutMS' => env('MONGODB_SOCKET_TIMEOUT', 5000),

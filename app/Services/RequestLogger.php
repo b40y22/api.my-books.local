@@ -182,8 +182,12 @@ class RequestLogger
     {
         try {
             $mongo = self::getMongoClient();
-            $database = config('database.connections.mongodb.database', 'requests');
-            $collection = $mongo->selectDatabase($database)->selectCollection('requests');
+            $database = config('database.connections.mongodb.database');
+            $collection = $mongo
+                ->selectDatabase($database)
+                ->selectCollection(
+                    config('database.connections.mongodb.request_tracking_collection')
+                );
 
             // Insert or update document
             $result = $collection->replaceOne(

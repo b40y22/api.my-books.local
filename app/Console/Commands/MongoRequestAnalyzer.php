@@ -2,9 +2,12 @@
 
 namespace App\Console\Commands;
 
+use Exception;
 use Illuminate\Console\Command;
 use MongoDB\Client;
 use MongoDB\BSON\UTCDateTime;
+use MongoDB\Collection;
+use MongoDB\Model\BSONArray;
 
 class MongoRequestAnalyzer extends Command
 {
@@ -70,11 +73,20 @@ class MongoRequestAnalyzer extends Command
             // Handle general query (if no request_id entered)
             return $this->analyzeRequests($collection);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $this->error('MongoDB connection failed: ' . $e->getMessage());
             return 1;
         }
 
+    }
+
+    private function extractValidationReason(string $message): string
+    {
+        if (preg_match('/Form Validation Failed in .+?: (.+)/', $message, $matches)) {
+            return $matches[1];
+        }
+
+        return $message;
     }
 
     /**
@@ -181,15 +193,20 @@ class MongoRequestAnalyzer extends Command
 
             $errorData = [];
             foreach ($request['errors'] as $index => $error) {
+                $message = $error['message'] ?? 'N/A';
+
+                $cleanMessage = $this->extractValidationReason($message);
+
                 $errorData[] = [
                     $index + 1,
                     $error['class'] ?? 'Unknown',
-                    $this->truncateString($error['message'] ?? 'N/A', 60),
+                    $this->truncateString($cleanMessage, 60),
                     ($error['file'] ?? 'N/A') . ':' . ($error['line'] ?? 'N/A')
                 ];
             }
             $this->table(['#', 'Exception Class', 'Message', 'Location'], $errorData);
         }
+
 
         // Performance summary
         $this->newLine();
@@ -228,7 +245,7 @@ class MongoRequestAnalyzer extends Command
         }
 
         // Convert BSON array to PHP array if needed
-        if ($bindings instanceof \MongoDB\Model\BSONArray) {
+        if ($bindings instanceof BSONArray) {
             $bindings = iterator_to_array($bindings);
         }
 
@@ -517,10 +534,14 @@ class MongoRequestAnalyzer extends Command
     /**
      * Get MongoDB collection
      */
-    private function getCollection()
+    private function getCollection(): Collection
     {
-        $database = config('database.connections.mongodb.database', 'app_logs');
-        return $this->mongo->selectDatabase($database)->selectCollection('requests');
+        $database = config('database.connections.mongodb.database');
+        return $this->mongo
+            ->selectDatabase($database)
+            ->selectCollection(
+                config('database.connections.mongodb.request_tracking_collection')
+            );
     }
 
     /**
@@ -528,7 +549,7 @@ class MongoRequestAnalyzer extends Command
      */
     private function formatDateTime($datetime, string $format = 'Y-m-d H:i:s'): string
     {
-        if ($datetime instanceof \MongoDB\BSON\UTCDateTime) {
+        if ($datetime instanceof UTCDateTime) {
             return $datetime->toDateTime()->format($format);
         }
         return 'N/A';
@@ -555,7 +576,7 @@ class MongoRequestAnalyzer extends Command
     /**
      * Convert BSONDocument to array recursively
      */
-    private function convertBsonToArray($data)
+    private function convertBsonToArray($data): array
     {
         if ($data instanceof \MongoDB\Model\BSONDocument) {
             return iterator_to_array($data);
