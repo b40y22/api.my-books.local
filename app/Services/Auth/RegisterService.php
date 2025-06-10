@@ -18,13 +18,13 @@ final readonly class RegisterService implements RegisterServiceInterface
     public function store(RegisterDto $registerDto): User
     {
         RequestLogger::addEvent('[service] registration_process_started', [
-            'email' => $registerDto->email
+            'email' => $registerDto->email,
         ]);
 
         $user = $this->userRepository->store($registerDto);
 
         RequestLogger::addEvent('[service] registration_completed', [
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         return $user;

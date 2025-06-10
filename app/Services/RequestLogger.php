@@ -3,17 +3,20 @@
 namespace App\Services;
 
 use Exception;
-use MongoDB\Client;
-use MongoDB\BSON\UTCDateTime;
-use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use MongoDB\BSON\UTCDateTime;
+use MongoDB\Client;
 use Throwable;
 
 class RequestLogger
 {
     private static ?string $requestId = null;
+
     private static array $requestData = [];
+
     private static ?Client $mongo = null;
+
     private static float $startTime = 0;
 
     /**
@@ -27,7 +30,7 @@ class RequestLogger
         // Initialize document structure in memory
         self::$requestData = [
             '_id' => self::$requestId,
-            'started_at' => new UTCDateTime(),
+            'started_at' => new UTCDateTime,
             'method' => request()->method(),
             'url' => request()->fullUrl(),
             'ip' => request()->ip(),
@@ -61,13 +64,13 @@ class RequestLogger
      */
     public static function addEvent(string $event, array $data = []): void
     {
-        if (!self::$requestId) {
+        if (! self::$requestId) {
             return;
         }
 
         self::$requestData['events'][] = [
             'event' => $event,
-            'timestamp' => new UTCDateTime(),
+            'timestamp' => new UTCDateTime,
             'data' => $data,
         ];
     }
@@ -77,7 +80,7 @@ class RequestLogger
      */
     public static function addQuery(string $sql, array $bindings, float $timeMs): void
     {
-        if (!self::$requestId) {
+        if (! self::$requestId) {
             return;
         }
 
@@ -85,7 +88,7 @@ class RequestLogger
             'sql' => $sql,
             'bindings' => $bindings,
             'time_ms' => round($timeMs, 2),
-            'timestamp' => new UTCDateTime(),
+            'timestamp' => new UTCDateTime,
         ];
 
         // Update general statistics
@@ -100,7 +103,7 @@ class RequestLogger
      */
     public static function addException(Throwable $exception): void
     {
-        if (!self::$requestId) {
+        if (! self::$requestId) {
             return;
         }
 
@@ -119,7 +122,7 @@ class RequestLogger
             Log::info('Exception added to RequestLogger', [
                 'request_id' => self::$requestId,
                 'exception_class' => get_class($exception),
-                'errors_count' => count(self::$requestData['errors'])
+                'errors_count' => count(self::$requestData['errors']),
             ]);
         }
 
@@ -134,14 +137,14 @@ class RequestLogger
      */
     public static function finishRequest(int $status): void
     {
-        if (!self::$requestId) {
+        if (! self::$requestId) {
             return;
         }
 
         $duration = round((microtime(true) - self::$startTime) * 1000, 2);
 
         // Fill final data
-        self::$requestData['finished_at'] = new UTCDateTime();
+        self::$requestData['finished_at'] = new UTCDateTime;
         self::$requestData['status'] = $status;
         self::$requestData['duration_ms'] = $duration;
 
@@ -221,10 +224,10 @@ class RequestLogger
      */
     private static function getMongoClient(): Client
     {
-        if (!self::$mongo) {
+        if (! self::$mongo) {
             $dsn = config('database.connections.mongodb.dsn');
 
-            if (!$dsn) {
+            if (! $dsn) {
                 throw new \Exception('MongoDB DSN not configured. Please set MONGODB_DSN in .env file');
             }
 
@@ -255,11 +258,13 @@ class RequestLogger
         try {
             $mongo = self::getMongoClient();
             $mongo->selectDatabase('admin')->command(['ping' => 1]);
+
             return true;
         } catch (\Exception $e) {
             Log::warning('MongoDB availability check failed', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return false;
         }
     }

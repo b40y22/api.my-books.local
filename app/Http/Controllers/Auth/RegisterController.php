@@ -22,13 +22,13 @@ final class RegisterController extends Controller
         $userDto = $request->validatedDTO(RegisterDto::class);
 
         RequestLogger::addEvent('[controller] registration_request_validated', [
-            'fields_count' => count($userDto->toArray())
+            'fields_count' => count($userDto->toArray()),
         ]);
 
         $user = $this->userService->store($userDto);
 
         RequestLogger::addEvent('[controller] registration_response_prepared', [
-            'user_id' => $user->id
+            'user_id' => $user->id,
         ]);
 
         return $this->created($user->toArray());

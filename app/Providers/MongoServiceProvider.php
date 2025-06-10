@@ -74,7 +74,7 @@ final class MongoServiceProvider extends ServiceProvider
         } catch (\Exception $e) {
             // Don't fail app startup if index creation fails
             logger()->warning('Failed to create MongoDB indexes', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
         }
     }

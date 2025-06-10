@@ -4,12 +4,12 @@ namespace App\Console\Commands;
 
 use Exception;
 use Illuminate\Console\Command;
-use MongoDB\Client;
 use MongoDB\BSON\UTCDateTime;
+use MongoDB\Client;
 use MongoDB\Collection;
 use MongoDB\Model\BSONArray;
 
-class MongoRequestAnalyzer extends Command
+final class MongoRequestAnalyzer extends Command
 {
     /**
      * The name and signature of the console command
@@ -65,6 +65,7 @@ class MongoRequestAnalyzer extends Command
                         return $this->analyzeSpecificRequest($collection, $requestId);
                     } else {
                         $this->error('❌ Invalid UUID format. Please provide a valid Request ID.');
+
                         return 1;
                     }
                 }
@@ -74,7 +75,8 @@ class MongoRequestAnalyzer extends Command
             return $this->analyzeRequests($collection);
 
         } catch (Exception $e) {
-            $this->error('MongoDB connection failed: ' . $e->getMessage());
+            $this->error('MongoDB connection failed: '.$e->getMessage());
+
             return 1;
         }
 
@@ -104,12 +106,14 @@ class MongoRequestAnalyzer extends Command
     {
         $request = $collection->findOne(['_id' => $requestId]);
 
-        if (!$request) {
+        if (! $request) {
             $this->error("Request {$requestId} not found");
+
             return 1;
         }
 
         $this->displayDetailedRequest($request);
+
         return 0;
     }
 
@@ -121,53 +125,53 @@ class MongoRequestAnalyzer extends Command
      */
     private function displayDetailedRequest($request): void
     {
-        $this->info("📋 Request Details: " . $request['_id']);
+        $this->info('📋 Request Details: '.$request['_id']);
         $this->newLine();
 
         // Basic information
-        $this->line("<comment>Basic Information:</comment>");
+        $this->line('<comment>Basic Information:</comment>');
         $this->table(['Field', 'Value'], [
             ['Request ID', $request['_id']],
             ['Method', $request['method'] ?? 'N/A'],
             ['URL', $request['url'] ?? 'N/A'],
-            ['Status', $this->getStatusIcon($request['status'] ?? 0) . ' ' . ($request['status'] ?? 'N/A')],
+            ['Status', $this->getStatusIcon($request['status'] ?? 0).' '.($request['status'] ?? 'N/A')],
             ['User ID', $request['user_id'] ?? 'Guest'],
             ['IP Address', $request['ip'] ?? 'N/A'],
             ['User Agent', $this->truncateString($request['user_agent'] ?? 'N/A', 50)],
             ['Started At', $this->formatDateTime($request['started_at'] ?? null)],
             ['Finished At', $this->formatDateTime($request['finished_at'] ?? null)],
-            ['Duration', ($request['duration_ms'] ?? 0) . ' ms'],
+            ['Duration', ($request['duration_ms'] ?? 0).' ms'],
             ['Query Count', $request['query_count'] ?? 0],
-            ['DB Time', ($request['db_time_ms'] ?? 0) . ' ms'],
+            ['DB Time', ($request['db_time_ms'] ?? 0).' ms'],
         ]);
 
         // Input data
-        if (!empty($request['input'])) {
+        if (! empty($request['input'])) {
             $this->newLine();
-            $this->line("<comment>Request Input:</comment>");
+            $this->line('<comment>Request Input:</comment>');
             $input = $this->convertBsonToArray($request['input']);
             $this->line(json_encode($input, JSON_PRETTY_PRINT));
         }
 
         // Events timeline
-        if (!empty($request['events'])) {
+        if (! empty($request['events'])) {
             $this->newLine();
-            $this->line("<comment>Events Timeline:</comment>");
+            $this->line('<comment>Events Timeline:</comment>');
             $eventData = [];
             foreach ($request['events'] as $event) {
                 $eventData[] = [
                     $this->formatDateTime($event['timestamp'] ?? null, 'H:i:s'),
                     $event['event'] ?? 'unknown',
-                    $this->formatEventData($event['data'] ?? [], 120)
+                    $this->formatEventData($event['data'] ?? [], 120),
                 ];
             }
             $this->table(['Time', 'Event', 'Data'], $eventData);
         }
 
         // Database queries
-        if (!empty($request['queries'])) {
+        if (! empty($request['queries'])) {
             $this->newLine();
-            $this->line("<comment>Database Queries:</comment>");
+            $this->line('<comment>Database Queries:</comment>');
             $queryData = [];
             foreach ($request['queries'] as $index => $query) {
                 $sql = $query['sql'] ?? 'N/A';
@@ -180,16 +184,16 @@ class MongoRequestAnalyzer extends Command
                     $index + 1,
                     $this->truncateString($sql, 60), // Truncate SQL
                     $formattedBindings,
-                    ($query['time_ms'] ?? 0) . ' ms'
+                    ($query['time_ms'] ?? 0).' ms',
                 ];
             }
             $this->table(['#', 'SQL Query', 'Bindings', 'Time'], $queryData);
         }
 
         // Errors/Exceptions - show only if there are errors
-        if (!empty($request['errors'])) {
+        if (! empty($request['errors'])) {
             $this->newLine();
-            $this->line("<comment>Errors/Exceptions:</comment>");
+            $this->line('<comment>Errors/Exceptions:</comment>');
 
             $errorData = [];
             foreach ($request['errors'] as $index => $error) {
@@ -201,20 +205,19 @@ class MongoRequestAnalyzer extends Command
                     $index + 1,
                     $error['class'] ?? 'Unknown',
                     $this->truncateString($cleanMessage, 60),
-                    ($error['file'] ?? 'N/A') . ':' . ($error['line'] ?? 'N/A')
+                    ($error['file'] ?? 'N/A').':'.($error['line'] ?? 'N/A'),
                 ];
             }
             $this->table(['#', 'Exception Class', 'Message', 'Location'], $errorData);
         }
 
-
         // Performance summary
         $this->newLine();
-        $this->line("<comment>Performance Summary:</comment>");
+        $this->line('<comment>Performance Summary:</comment>');
         $performanceData = [
-            ['Total Duration', ($request['duration_ms'] ?? 0) . ' ms'],
-            ['Database Time', ($request['db_time_ms'] ?? 0) . ' ms'],
-            ['Application Time', (($request['duration_ms'] ?? 0) - ($request['db_time_ms'] ?? 0)) . ' ms'],
+            ['Total Duration', ($request['duration_ms'] ?? 0).' ms'],
+            ['Database Time', ($request['db_time_ms'] ?? 0).' ms'],
+            ['Application Time', (($request['duration_ms'] ?? 0) - ($request['db_time_ms'] ?? 0)).' ms'],
             ['Query Count', $request['query_count'] ?? 0],
             ['Event Count', count($request['events'] ?? [])],
             ['Error Count', count($request['errors'] ?? [])],
@@ -225,13 +228,13 @@ class MongoRequestAnalyzer extends Command
         $status = $request['status'] ?? 0;
         $this->newLine();
         if ($status >= 200 && $status < 300) {
-            $this->info("✅ Request completed successfully");
+            $this->info('✅ Request completed successfully');
         } elseif ($status >= 400 && $status < 500) {
-            $this->warn("⚠️  Client error response");
+            $this->warn('⚠️  Client error response');
         } elseif ($status >= 500) {
-            $this->error("❌ Server error response");
+            $this->error('❌ Server error response');
         } else {
-            $this->line("❓ Unknown status code");
+            $this->line('❓ Unknown status code');
         }
     }
 
@@ -250,7 +253,7 @@ class MongoRequestAnalyzer extends Command
         }
 
         // Make sure it's an array
-        if (!is_array($bindings)) {
+        if (! is_array($bindings)) {
             return json_encode($bindings);
         }
 
@@ -258,15 +261,15 @@ class MongoRequestAnalyzer extends Command
         foreach ($bindings as $binding) {
             if (is_string($binding) && strlen($binding) > 50) {
                 // If string is very long (serialized data) - show only beginning
-                $formatted[] = '"' . substr($binding, 0, 30) . '..." (' . strlen($binding) . ' chars)';
+                $formatted[] = '"'.substr($binding, 0, 30).'..." ('.strlen($binding).' chars)';
             } elseif (is_string($binding)) {
-                $formatted[] = '"' . $binding . '"';
+                $formatted[] = '"'.$binding.'"';
             } else {
                 $formatted[] = json_encode($binding);
             }
         }
 
-        return '[' . implode(', ', $formatted) . ']';
+        return '['.implode(', ', $formatted).']';
     }
 
     /**
@@ -274,7 +277,7 @@ class MongoRequestAnalyzer extends Command
      */
     private function showStatistics($collection): int
     {
-        $this->info("📊 Request Statistics");
+        $this->info('📊 Request Statistics');
         $this->newLine();
 
         $filter = $this->buildFilter();
@@ -308,9 +311,9 @@ class MongoRequestAnalyzer extends Command
             ['$match' => $filter],
             ['$group' => [
                 '_id' => '$status',
-                'count' => ['$sum' => 1]
+                'count' => ['$sum' => 1],
             ]],
-            ['$sort' => ['_id' => 1]]
+            ['$sort' => ['_id' => 1]],
         ];
 
         $results = $collection->aggregate($pipeline);
@@ -320,11 +323,11 @@ class MongoRequestAnalyzer extends Command
             $statusData[] = [
                 $result['_id'] ?? 'Unknown',
                 $result['count'],
-                $this->getStatusDescription($result['_id'] ?? 0)
+                $this->getStatusDescription($result['_id'] ?? 0),
             ];
         }
 
-        $this->line("<comment>Status Code Distribution:</comment>");
+        $this->line('<comment>Status Code Distribution:</comment>');
         $this->table(['Status Code', 'Count', 'Description'], $statusData);
         $this->newLine();
     }
@@ -339,9 +342,9 @@ class MongoRequestAnalyzer extends Command
             ['$group' => [
                 '_id' => '$method',
                 'count' => ['$sum' => 1],
-                'avg_duration' => ['$avg' => '$duration_ms']
+                'avg_duration' => ['$avg' => '$duration_ms'],
             ]],
-            ['$sort' => ['count' => -1]]
+            ['$sort' => ['count' => -1]],
         ];
 
         $results = $collection->aggregate($pipeline);
@@ -351,11 +354,11 @@ class MongoRequestAnalyzer extends Command
             $methodData[] = [
                 $result['_id'] ?? 'Unknown',
                 $result['count'],
-                round($result['avg_duration'] ?? 0, 2) . ' ms'
+                round($result['avg_duration'] ?? 0, 2).' ms',
             ];
         }
 
-        $this->line("<comment>HTTP Method Distribution:</comment>");
+        $this->line('<comment>HTTP Method Distribution:</comment>');
         $this->table(['Method', 'Count', 'Avg Duration'], $methodData);
         $this->newLine();
     }
@@ -374,25 +377,25 @@ class MongoRequestAnalyzer extends Command
                 'min_duration' => ['$min' => '$duration_ms'],
                 'avg_queries' => ['$avg' => '$query_count'],
                 'max_queries' => ['$max' => '$query_count'],
-                'avg_db_time' => ['$avg' => '$db_time_ms']
-            ]]
+                'avg_db_time' => ['$avg' => '$db_time_ms'],
+            ]],
         ];
 
         $results = $collection->aggregate($pipeline)->toArray();
 
-        if (!empty($results)) {
+        if (! empty($results)) {
             $stats = $results[0];
 
             $performanceData = [
-                ['Avg Duration', round($stats['avg_duration'] ?? 0, 2) . ' ms'],
-                ['Max Duration', round($stats['max_duration'] ?? 0, 2) . ' ms'],
-                ['Min Duration', round($stats['min_duration'] ?? 0, 2) . ' ms'],
+                ['Avg Duration', round($stats['avg_duration'] ?? 0, 2).' ms'],
+                ['Max Duration', round($stats['max_duration'] ?? 0, 2).' ms'],
+                ['Min Duration', round($stats['min_duration'] ?? 0, 2).' ms'],
                 ['Avg Queries', round($stats['avg_queries'] ?? 0, 2)],
                 ['Max Queries', $stats['max_queries'] ?? 0],
-                ['Avg DB Time', round($stats['avg_db_time'] ?? 0, 2) . ' ms'],
+                ['Avg DB Time', round($stats['avg_db_time'] ?? 0, 2).' ms'],
             ];
 
-            $this->line("<comment>Performance Statistics:</comment>");
+            $this->line('<comment>Performance Statistics:</comment>');
             $this->table(['Metric', 'Value'], $performanceData);
             $this->newLine();
         }
@@ -411,10 +414,10 @@ class MongoRequestAnalyzer extends Command
             ['$unwind' => '$errors'],
             ['$group' => [
                 '_id' => '$errors.class',
-                'count' => ['$sum' => 1]
+                'count' => ['$sum' => 1],
             ]],
             ['$sort' => ['count' => -1]],
-            ['$limit' => 10]
+            ['$limit' => 10],
         ];
 
         $results = $collection->aggregate($pipeline);
@@ -423,14 +426,14 @@ class MongoRequestAnalyzer extends Command
         foreach ($results as $result) {
             $errorData[] = [
                 $result['_id'] ?? 'Unknown',
-                $result['count']
+                $result['count'],
             ];
         }
 
-        $this->line("<comment>Error Statistics:</comment>");
+        $this->line('<comment>Error Statistics:</comment>');
         $this->line("Total Requests with Errors: <comment>{$errorCount}</comment>");
 
-        if (!empty($errorData)) {
+        if (! empty($errorData)) {
             $this->table(['Exception Class', 'Count'], $errorData);
         }
         $this->newLine();
@@ -444,7 +447,7 @@ class MongoRequestAnalyzer extends Command
         $filter = $this->buildFilter();
         $options = [
             'sort' => ['started_at' => -1],
-            'limit' => (int) $this->option('limit')
+            'limit' => (int) $this->option('limit'),
         ];
 
         $requests = $collection->find($filter, $options);
@@ -516,18 +519,18 @@ class MongoRequestAnalyzer extends Command
 
         foreach ($requests as $request) {
             $tableData[] = [
-                substr($request['_id'], 0, 8) . '...',
+                substr($request['_id'], 0, 8).'...',
                 $this->formatDateTime($request['started_at'] ?? null, 'H:i:s'),
                 $request['method'] ?? 'N/A',
-                $this->getStatusIcon($request['status'] ?? 0) . ' ' . ($request['status'] ?? 'N/A'),
-                round($request['duration_ms'] ?? 0, 1) . 'ms',
+                $this->getStatusIcon($request['status'] ?? 0).' '.($request['status'] ?? 'N/A'),
+                round($request['duration_ms'] ?? 0, 1).'ms',
                 $request['query_count'] ?? 0,
-                $this->truncateString($request['url'] ?? 'N/A', 40)
+                $this->truncateString($request['url'] ?? 'N/A', 40),
             ];
         }
 
         $this->table([
-            'Request ID', 'Time', 'Method', 'Status', 'Duration', 'Queries', 'URL'
+            'Request ID', 'Time', 'Method', 'Status', 'Duration', 'Queries', 'URL',
         ], $tableData);
     }
 
@@ -537,6 +540,7 @@ class MongoRequestAnalyzer extends Command
     private function getCollection(): Collection
     {
         $database = config('database.connections.mongodb.database');
+
         return $this->mongo
             ->selectDatabase($database)
             ->selectCollection(
@@ -552,6 +556,7 @@ class MongoRequestAnalyzer extends Command
         if ($datetime instanceof UTCDateTime) {
             return $datetime->toDateTime()->format($format);
         }
+
         return 'N/A';
     }
 
@@ -598,7 +603,7 @@ class MongoRequestAnalyzer extends Command
      */
     private function truncateString(string $string, int $length): string
     {
-        return strlen($string) > $length ? substr($string, 0, $length - 3) . '...' : $string;
+        return strlen($string) > $length ? substr($string, 0, $length - 3).'...' : $string;
     }
 
     /**
@@ -625,10 +630,19 @@ class MongoRequestAnalyzer extends Command
      */
     private function getStatusIcon(int $status): string
     {
-        if ($status >= 200 && $status < 300) return '✅';
-        if ($status >= 300 && $status < 400) return '🔄';
-        if ($status >= 400 && $status < 500) return '❌';
-        if ($status >= 500) return '💥';
+        if ($status >= 200 && $status < 300) {
+            return '✅';
+        }
+        if ($status >= 300 && $status < 400) {
+            return '🔄';
+        }
+        if ($status >= 400 && $status < 500) {
+            return '❌';
+        }
+        if ($status >= 500) {
+            return '💥';
+        }
+
         return '❓';
     }
 

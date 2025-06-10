@@ -12,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-class Handler extends ExceptionHandler
+final class Handler extends ExceptionHandler
 {
     /**
      * The list of the inputs that are never flashed to the session on validation exceptions.
@@ -165,7 +165,7 @@ class Handler extends ExceptionHandler
         ];
 
         // Add debug information in non-production environments
-        if (!app()->environment('production')) {
+        if (! app()->environment('production')) {
             $responseData['debug'] = [
                 'exception' => get_class($e),
                 'file' => $e->getFile(),
@@ -265,6 +265,6 @@ class Handler extends ExceptionHandler
         parent::report($e);
 
         // Add our custom MongoDB logging
-//        $this->logExceptionToMongo($e);
+        //        $this->logExceptionToMongo($e);
     }
 }

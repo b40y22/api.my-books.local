@@ -6,7 +6,6 @@ use App\Services\RequestLogger;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Event;
 
 final class EventServiceProvider extends ServiceProvider
 {

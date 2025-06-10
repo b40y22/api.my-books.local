@@ -9,8 +9,6 @@ use App\Http\Dto\Request\BaseDto;
 use App\Services\RequestLogger;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Http\Exceptions\HttpResponseException;
-use Symfony\Component\HttpFoundation\Response;
 
 abstract class BaseFormRequest extends FormRequest
 {
@@ -20,14 +18,12 @@ abstract class BaseFormRequest extends FormRequest
     }
 
     /**
-     * @param Validator $validator
-     * @return void
      * @throws ValidationException
      */
     protected function failedValidation(Validator $validator): void
     {
         $validationException = new \Exception(
-            'Form Validation Failed in ' . static::class . ': ' . implode('; ', $validator->errors()->all())
+            'Form Validation Failed in '.static::class.': '.implode('; ', $validator->errors()->all())
         );
 
         RequestLogger::addException($validationException);
@@ -51,7 +47,7 @@ abstract class BaseFormRequest extends FormRequest
             $failedRules[$field] = [
                 'messages' => $messages,
                 'value' => $this->input($field),
-                'rules' => $this->rules()[$field] ?? 'unknown'
+                'rules' => $this->rules()[$field] ?? 'unknown',
             ];
         }
 

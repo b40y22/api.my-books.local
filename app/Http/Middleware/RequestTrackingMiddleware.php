@@ -8,12 +8,9 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Throwable;
 
-class RequestTrackingMiddleware
+final class RequestTrackingMiddleware
 {
     /**
-     * @param Request $request
-     * @param Closure $next
-     * @return Response
      * @throws Throwable
      */
     public function handle(Request $request, Closure $next): Response
@@ -34,11 +31,6 @@ class RequestTrackingMiddleware
         }
     }
 
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return void
-     */
     public function terminate(Request $request, Response $response): void
     {
         RequestLogger::finishRequest($response->getStatusCode());

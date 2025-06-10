@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Http\Dto\Request\Auth;
 
 use App\Http\Dto\Request\BaseDto;
-use App\Http\Requests\Auth\RegisterRequest;
 
 final class RegisterDto extends BaseDto
 {

@@ -24,7 +24,7 @@ final class SendVerificationEmail implements ShouldQueue
     {
         Log::error('Failed to queue verification email', [
             'user_id' => $event->user->id,
-            'error' => $exception->getMessage()
+            'error' => $exception->getMessage(),
         ]);
     }
 }

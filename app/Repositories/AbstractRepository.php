@@ -16,4 +16,9 @@ abstract class AbstractRepository implements AbstractRepositoryInterface
     {
         return $this->model->where('id', $id)->first();
     }
+
+    public function find(int $id): ?Model
+    {
+        return $this->model->find($id);
+    }
 }
