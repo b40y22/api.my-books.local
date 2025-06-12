@@ -62,7 +62,10 @@ final readonly class EmailVerificationService implements EmailVerificationServic
         $user = $this->userRepository->findOrFail($userId);
 
         if ($user->hasVerifiedEmail()) {
-            throw new ValidationException('Email already verified.');
+            return [
+                'message' => 'Email already verified.',
+                'already_verified' => true,
+            ];
         }
 
         $user->sendEmailVerificationNotification();
@@ -82,13 +85,17 @@ final readonly class EmailVerificationService implements EmailVerificationServic
     public function resendVerificationEmailForUser($user): array
     {
         if ($user->hasVerifiedEmail()) {
-            throw new ValidationException('Email already verified.');
+            return [
+                'message' => 'Email already verified.',
+                'already_verified' => true,
+            ];
         }
 
         $user->sendEmailVerificationNotification();
 
         return [
             'message' => 'Verification email sent.',
+            'already_verified' => false,
         ];
     }
 }
