@@ -9,7 +9,9 @@ use App\Http\Dto\BaseDto;
 final class LoginDto extends BaseDto
 {
     public string $email;
+
     public string $password;
+
     public bool $remember;
 
     public function __construct(array $data)

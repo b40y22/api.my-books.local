@@ -7,7 +7,7 @@ namespace App\Http\Dto\Response\Auth;
 use App\Http\Dto\BaseDto;
 use App\Models\User;
 
-final class RegisterDto extends BaseDto
+final class LoginDto extends BaseDto
 {
     public string $name;
 

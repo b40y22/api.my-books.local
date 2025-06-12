@@ -5,11 +5,17 @@ declare(strict_types=1);
 namespace App\Exceptions;
 
 use App\Services\RequestLogger;
+use Exception;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\HttpException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Throwable;
 
 final class Handler extends ExceptionHandler
@@ -31,7 +37,6 @@ final class Handler extends ExceptionHandler
     public function register(): void
     {
         $this->reportable(function (Throwable $e) {
-            // Log exception to our MongoDB tracking system
             $this->logExceptionToMongo($e);
         });
     }
@@ -66,7 +71,7 @@ final class Handler extends ExceptionHandler
             // Add specific contextual events based on exception type
             $this->addContextualExceptionEvents($e);
 
-        } catch (\Exception $mongoException) {
+        } catch (Exception $mongoException) {
             // Fallback to standard Laravel logging if MongoDB fails
             logger()->error('Failed to log exception to MongoDB', [
                 'original_exception' => [
@@ -93,7 +98,7 @@ final class Handler extends ExceptionHandler
             ]);
         }
 
-        if ($e instanceof \Illuminate\Database\QueryException) {
+        if ($e instanceof QueryException) {
             RequestLogger::addEvent('database_exception_details', [
                 'error_code' => $e->getCode(),
                 'sql_state' => $e->errorInfo[0] ?? 'unknown',
@@ -108,7 +113,7 @@ final class Handler extends ExceptionHandler
             ]);
         }
 
-        if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+        if ($e instanceof NotFoundHttpException) {
             RequestLogger::addEvent('not_found_exception_details', [
                 'requested_path' => request()->path(),
                 'method' => request()->method(),
@@ -134,7 +139,6 @@ final class Handler extends ExceptionHandler
             'data' => [],
             'errors' => array_values($e->validator->errors()->all()),
             'request_id' => $requestId,
-            'timestamp' => now()->toISOString(),
         ], 422)->withHeaders([
             'X-Request-ID' => $requestId,
             'X-Error-Type' => 'validation',
@@ -161,7 +165,6 @@ final class Handler extends ExceptionHandler
             'data' => [],
             'error' => $this->getUserFriendlyMessage($e),
             'request_id' => $requestId,
-            'timestamp' => now()->toISOString(),
         ];
 
         // Add debug information in non-production environments
@@ -200,7 +203,7 @@ final class Handler extends ExceptionHandler
      */
     private function getStatusCodeFromException(Throwable $e): int
     {
-        if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
+        if ($e instanceof HttpException) {
             return $e->getStatusCode();
         }
 
@@ -208,15 +211,15 @@ final class Handler extends ExceptionHandler
             return 401;
         }
 
-        if ($e instanceof \Illuminate\Auth\Access\AuthorizationException) {
+        if ($e instanceof AuthorizationException) {
             return 403;
         }
 
-        if ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+        if ($e instanceof ModelNotFoundException) {
             return 404;
         }
 
-        if ($e instanceof \Illuminate\Validation\ValidationException) {
+        if ($e instanceof ValidationException) {
             return 422;
         }
 
@@ -232,19 +235,19 @@ final class Handler extends ExceptionHandler
             return 'Authentication required.';
         }
 
-        if ($e instanceof \Illuminate\Auth\Access\AuthorizationException) {
+        if ($e instanceof AuthorizationException) {
             return 'You are not authorized to perform this action.';
         }
 
-        if ($e instanceof \Illuminate\Database\Eloquent\ModelNotFoundException) {
+        if ($e instanceof ModelNotFoundException) {
             return 'The requested resource was not found.';
         }
 
-        if ($e instanceof \Symfony\Component\HttpKernel\Exception\NotFoundHttpException) {
+        if ($e instanceof NotFoundHttpException) {
             return 'The requested endpoint was not found.';
         }
 
-        if ($e instanceof \Illuminate\Database\QueryException) {
+        if ($e instanceof QueryException) {
             return 'A database error occurred. Please try again later.';
         }
 
@@ -265,6 +268,6 @@ final class Handler extends ExceptionHandler
         parent::report($e);
 
         // Add our custom MongoDB logging
-        //        $this->logExceptionToMongo($e);
+        // $this->logExceptionToMongo($e);
     }
 }

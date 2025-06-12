@@ -11,12 +11,8 @@ use Symfony\Component\HttpFoundation\Response;
 
 final class LoginAttemptMiddleware
 {
-    /**
-     * Handle an incoming request and log login attempts for security monitoring
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        // Log the start of login attempt with user details and request info
         RequestLogger::addEvent('[middleware] login_attempt_started', [
             'email' => $request->input('email'),
             'ip' => $request->ip(),
@@ -26,10 +22,8 @@ final class LoginAttemptMiddleware
 
         $response = $next($request);
 
-        // Determine if login was successful based on HTTP status code
         $isSuccessful = $response->getStatusCode() === 200;
 
-        // Log the completion of login attempt with result
         RequestLogger::addEvent('[middleware] login_attempt_completed', [
             'email' => $request->input('email'),
             'success' => $isSuccessful,
@@ -37,8 +31,7 @@ final class LoginAttemptMiddleware
             'ip' => $request->ip(),
         ]);
 
-        // Additional logging for failed attempts to help with security analysis
-        if (!$isSuccessful) {
+        if (! $isSuccessful) {
             RequestLogger::addEvent('[middleware] login_failed', [
                 'email' => $request->input('email'),
                 'reason' => $this->getFailureReason($response),
@@ -49,15 +42,12 @@ final class LoginAttemptMiddleware
         return $response;
     }
 
-    /**
-     * Determine the reason for login failure based on HTTP status code
-     */
     private function getFailureReason(Response $response): string
     {
-        return match($response->getStatusCode()) {
-            401 => 'invalid_credentials',
-            422 => 'validation_error',
-            429 => 'rate_limited',
+        return match ($response->getStatusCode()) {
+            Response::HTTP_UNAUTHORIZED => 'invalid_credentials',
+            Response::HTTP_UNPROCESSABLE_ENTITY => 'validation_error',
+            Response::HTTP_TOO_MANY_REQUESTS => 'rate_limited',
             default => 'unknown_error'
         };
     }

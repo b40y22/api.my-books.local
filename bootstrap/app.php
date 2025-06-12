@@ -1,6 +1,8 @@
 <?php
 
+use App\Exceptions\AuthenticationException as CustomAuthenticationException;
 use App\Http\Middleware\RequestTrackingMiddleware;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -16,5 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->append(RequestTrackingMiddleware::class);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        $exceptions->render(function (AuthenticationException $e, $request) {
+            return CustomAuthenticationException::handle($e, $request);
+        });
     })->create();

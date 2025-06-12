@@ -7,6 +7,7 @@ namespace App\Services\Auth;
 use App\Events\Auth\UserRegistered;
 use App\Exceptions\HttpRequestException;
 use App\Exceptions\ValidationException;
+use App\Models\User;
 use App\Repositories\Users\UserRepository;
 use Illuminate\Http\Request;
 
@@ -17,10 +18,6 @@ final readonly class EmailVerificationService implements EmailVerificationServic
     ) {}
 
     /**
-     * @param Request $request
-     * @param int $userId
-     * @param string $hash
-     * @return array
      * @throws HttpRequestException
      * @throws ValidationException
      */
@@ -30,6 +27,7 @@ final readonly class EmailVerificationService implements EmailVerificationServic
             throw new HttpRequestException('The verification link is invalid.');
         }
 
+        /** @var User $user */
         $user = $this->userRepository->findOrFail($userId);
 
         if (! $user) {
@@ -38,7 +36,7 @@ final readonly class EmailVerificationService implements EmailVerificationServic
 
         if ($user->hasVerifiedEmail()) {
             return [
-                'message' => 'Email already verified.',
+                'message' => 'Email already verified.'
             ];
         }
 
@@ -49,25 +47,26 @@ final readonly class EmailVerificationService implements EmailVerificationServic
         $user->markEmailAsVerified();
 
         return [
-            'message' => 'Email verified successfully.',
+            'message' => 'Email verified successfully.'
         ];
     }
 
     /**
-     * @param int $userId
      * @return string[]
+     *
      * @throws ValidationException
      */
     public function resendVerificationEmail(int $userId): array
     {
+        /** @var User $user */
         $user = $this->userRepository->findOrFail($userId);
 
         if ($user->hasVerifiedEmail()) {
             throw new ValidationException('Email already verified.');
         }
 
-        dd($user);
         $user->sendEmailVerificationNotification();
+
         event(new UserRegistered($user));
 
         return [
@@ -76,8 +75,8 @@ final readonly class EmailVerificationService implements EmailVerificationServic
     }
 
     /**
-     * @param $user
      * @return string[]
+     *
      * @throws ValidationException
      */
     public function resendVerificationEmailForUser($user): array

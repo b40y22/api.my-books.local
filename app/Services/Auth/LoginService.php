@@ -7,6 +7,7 @@ namespace App\Services\Auth;
 use App\Exceptions\AuthenticationException;
 use App\Exceptions\ValidationException;
 use App\Http\Dto\Request\Auth\LoginDto;
+use App\Http\Dto\Response\Auth\LoginDto as ResponseLoginDto;
 use App\Models\User;
 use App\Repositories\Users\UserRepositoryInterface;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,7 @@ final readonly class LoginService implements LoginServiceInterface
 
     /**
      * Authenticate user with email and password, return token and user data
+     *
      * @throws AuthenticationException
      * @throws ValidationException
      */
@@ -28,22 +30,22 @@ final readonly class LoginService implements LoginServiceInterface
         // Find user by email
         $user = $this->userRepository->findByEmail($loginDto->email);
 
-        if (!$user) {
+        if (! $user) {
             throw new AuthenticationException(__('auth.failed'));
         }
 
         // Check if email is verified
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             throw new ValidationException(__('auth.email_not_verified'));
         }
 
         // Verify password
-        if (!Hash::check($loginDto->password, $user->password)) {
+        if (! Hash::check($loginDto->password, $user->password)) {
             throw new AuthenticationException(__('auth.failed'));
         }
 
         // Revoke existing tokens if not using remember me
-        if (!$loginDto->remember) {
+        if (! $loginDto->remember) {
             $user->tokens()->delete();
         }
 
@@ -56,43 +58,53 @@ final readonly class LoginService implements LoginServiceInterface
             Auth::login($user, true);
         }
 
-        return [
-            'user' => $user->toArray(),
-            'access_token' => $token->plainTextToken,
-            'token_type' => 'Bearer',
-            'expires_in' => config('sanctum.expiration') ? config('sanctum.expiration') * 60 : null,
-        ];
+        return new ResponseLoginDto($user)->toArray();
     }
 
     /**
      * Logout current user by revoking current access token
+     *
+     * @throws AuthenticationException
      */
     public function logout(): void
     {
         $user = Auth::user();
 
-        if ($user && $user->currentAccessToken()) {
-            $user->currentAccessToken()->delete();
+        if (! $user) {
+            throw new AuthenticationException(__('auth.logout_failed_no_user'));
         }
 
-        Auth::logout();
+        $currentToken = $user->currentAccessToken();
+
+        if (! $currentToken) {
+            throw new AuthenticationException(__('auth.logout_failed_no_token'));
+        }
+
+        $currentToken->delete();
     }
 
     /**
      * Logout user from all devices by revoking all tokens
+     *
+     * @throws AuthenticationException
      */
     public function logoutFromAllDevices(): void
     {
         $user = Auth::user();
 
-        $user?->tokens()->delete();
+        if (! $user) {
+            throw new AuthenticationException(__('auth.logout_failed_no_user'));
+        }
 
-        Auth::logout();
+        $tokenCount = $user->tokens()->count();
+
+        if ($tokenCount === 0) {
+            throw new AuthenticationException(__('auth.logout_no_active_sessions'));
+        }
+
+        $user->tokens()->delete();
     }
 
-    /**
-     * Generate unique token name for tracking
-     */
     private function generateTokenName(): string
     {
         $deviceInfo = $this->getDeviceFingerprint();
@@ -102,16 +114,13 @@ final readonly class LoginService implements LoginServiceInterface
         return "auth_{$deviceInfo}_{$timestamp}_{$random}";
     }
 
-    /**
-     * Create device fingerprint without exposing sensitive data
-     */
     private function getDeviceFingerprint(): string
     {
         $userAgent = request()->userAgent() ?? 'unknown';
         $ip = request()->ip() ?? 'unknown';
 
         // Create short hash instead of exposing real IP
-        $fingerprint = hash('crc32', $userAgent . $ip);
+        $fingerprint = hash('crc32', $userAgent.$ip);
 
         // Detect device type for better identification
         $deviceType = $this->detectDeviceType($userAgent);
@@ -119,25 +128,15 @@ final readonly class LoginService implements LoginServiceInterface
         return "{$deviceType}_{$fingerprint}";
     }
 
-    /**
-     * Detect device type from user agent
-     */
     private function detectDeviceType(string $userAgent): string
     {
         $userAgent = strtolower($userAgent);
 
-        if (str_contains($userAgent, 'mobile') || str_contains($userAgent, 'android')) {
-            return 'mobile';
-        }
-
-        if (str_contains($userAgent, 'tablet') || str_contains($userAgent, 'ipad')) {
-            return 'tablet';
-        }
-
-        if (str_contains($userAgent, 'postman') || str_contains($userAgent, 'insomnia')) {
-            return 'api';
-        }
-
-        return 'desktop';
+        return match (true) {
+            str_contains($userAgent, 'mobile') || str_contains($userAgent, 'android') => 'mobile',
+            str_contains($userAgent, 'tablet') || str_contains($userAgent, 'ipad') => 'tablet',
+            str_contains($userAgent, 'postman') || str_contains($userAgent, 'insomnia') => 'api',
+            default => 'desktop'
+        };
     }
 }

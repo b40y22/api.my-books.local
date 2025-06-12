@@ -19,7 +19,10 @@ return [
     'email_not_verified' => 'Please verify your email address before logging in.',
     'login_successful' => 'Login successful.',
     'logout_successful' => 'Logout successful.',
+    'logout_failed_no_user' => 'No authenticated user found.',
+    'logout_failed_no_token' => 'No active session found.',
     'logout_all_successful' => 'Logged out from all devices successfully.',
+    'unauthenticated' => 'Authentication required. Please provide a valid token.',
 
     // Registration messages
     'registration_successful' => 'Registration successful. Please check your email to verify your account.',

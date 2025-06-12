@@ -13,8 +13,6 @@ interface LoginServiceInterface
     /**
      * Authenticate user and return access token with user data
      *
-     * @param LoginDto $loginDto
-     * @return array
      * @throws AuthenticationException
      * @throws ValidationException
      */
@@ -22,15 +20,11 @@ interface LoginServiceInterface
 
     /**
      * Logout user by revoking current access token
-     *
-     * @return void
      */
     public function logout(): void;
 
     /**
      * Logout user from all devices by revoking all tokens
-     *
-     * @return void
      */
     public function logoutFromAllDevices(): void;
 }

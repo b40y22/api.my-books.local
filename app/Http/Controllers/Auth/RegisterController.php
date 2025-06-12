@@ -9,7 +9,6 @@ use App\Http\Dto\Request\Auth\RegisterDto;
 use App\Http\Dto\Response\Auth\RegisterDto as ResponseRegisterDto;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Services\Auth\RegisterServiceInterface;
-use App\Services\RequestLogger;
 use Illuminate\Http\JsonResponse;
 
 final class RegisterController extends Controller
