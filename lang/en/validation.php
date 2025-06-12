@@ -1,22 +1,35 @@
 <?php
 
 return [
-    'firstname' => [
-        'required' => 'The firstname field is required.',
-        'string' => 'The firstname field must be a string.',
-    ],
-    'lastname' => [
-        'string' => 'The lastname field must be a string.',
-    ],
+    // Email validation
     'email' => [
-        'required' => 'The email field is required.',
-        'email' => 'The email field must be a valid email address.',
-        'unique' => 'This email is already registered.',
+        'required' => 'Email address is required.',
+        'email' => 'Please provide a valid email address.',
+        'unique' => 'This email address is already registered.',
+        'exists' => 'This email address is not registered.',
     ],
+
+    // Password validation
     'password' => [
-        'required' => 'The password field is required.',
-        'string' => 'The password field must be a string.',
-        'confirmed' => 'The password confirmation does not match.',
-        'min' => 'The password must be at least 8 characters.',
+        'required' => 'Password is required.',
+        'string' => 'Password must be a valid string.',
+        'confirmed' => 'Password confirmation does not match.',
+        'min' => 'Password must be at least :min characters.',
+        'min_login' => 'Password is required.',
+    ],
+
+    // Name validation
+    'firstname' => [
+        'required' => 'First name is required.',
+        'string' => 'First name must be a valid string.',
+    ],
+
+    'lastname' => [
+        'string' => 'Last name must be a valid string.',
+    ],
+
+    // Remember validation
+    'remember' => [
+        'boolean' => 'Remember me must be true or false.',
     ],
 ];

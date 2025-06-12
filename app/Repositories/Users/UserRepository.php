@@ -34,4 +34,14 @@ final class UserRepository extends AbstractRepository implements UserRepositoryI
 
         return $user;
     }
+
+    public function findByEmail(string $email): ?User
+    {
+        return $this->model->where('email', $email)->first();
+    }
+
+    public function existsByEmail(string $email): bool
+    {
+        return $this->model->where('email', $email)->exists();
+    }
 }
