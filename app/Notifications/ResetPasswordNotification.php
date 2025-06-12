@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
+use App\Services\RequestLogger;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
@@ -23,6 +24,12 @@ final class ResetPasswordNotification extends Notification
 
     public function toMail(object $notifiable): MailMessage
     {
+        RequestLogger::addEvent('password_reset_email_generated', [
+            'user_id' => $notifiable->id,
+            'email' => $notifiable->email,
+            'token_preview' => substr($this->token, 0, 8) . '...',
+        ]);
+
         $resetUrl = $this->resetUrl($notifiable);
 
         return (new MailMessage)

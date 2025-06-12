@@ -11,9 +11,6 @@ use MongoDB\Model\BSONArray;
 
 final class MongoRequestAnalyzer extends Command
 {
-    /**
-     * The name and signature of the console command
-     */
     protected $signature = 'requests:analyze
                            {request_id? : Specific request ID to analyze}
                            {--user= : Filter by user ID}
@@ -29,38 +26,28 @@ final class MongoRequestAnalyzer extends Command
                            {--stats : Show statistics instead of individual requests}
                            {--export= : Export results to file}';
 
-    /**
-     * The console command description
-     */
     protected $description = 'Analyze HTTP requests stored in MongoDB';
 
     private ?Client $mongo = null;
 
-    /**
-     * Execute the console command
-     */
     public function handle(): int
     {
         try {
             $this->mongo = new Client(config('database.connections.mongodb.dsn'));
             $collection = $this->getCollection();
 
-            // Handle specific request ID lookup
             if ($requestId = $this->argument('request_id')) {
                 return $this->analyzeSpecificRequest($collection, $requestId);
             }
 
-            // Handle statistics request
             if ($this->option('stats')) {
                 return $this->showStatistics($collection);
             }
 
-            // If no request_id argument, ask interactively
             if ($this->input->isInteractive()) {
                 $requestId = $this->ask('🔍 Enter Request ID to analyze (or press Enter to show recent requests)');
 
                 if ($requestId) {
-                    // Check if this is a valid UUID format
                     if ($this->isValidUuid($requestId)) {
                         return $this->analyzeSpecificRequest($collection, $requestId);
                     } else {
@@ -71,7 +58,6 @@ final class MongoRequestAnalyzer extends Command
                 }
             }
 
-            // Handle general query (if no request_id entered)
             return $this->analyzeRequests($collection);
 
         } catch (Exception $e) {
@@ -91,17 +77,11 @@ final class MongoRequestAnalyzer extends Command
         return $message;
     }
 
-    /**
-     * Check if string is valid UUID format
-     */
     private function isValidUuid(string $uuid): bool
     {
         return preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $uuid) === 1;
     }
 
-    /**
-     * Analyze specific request by ID
-     */
     private function analyzeSpecificRequest($collection, string $requestId): int
     {
         $request = $collection->findOne(['_id' => $requestId]);
@@ -117,12 +97,6 @@ final class MongoRequestAnalyzer extends Command
         return 0;
     }
 
-    /**
-     * Display detailed information about a single request
-     */
-    /**
-     * Display detailed information about a single request
-     */
     private function displayDetailedRequest($request): void
     {
         $this->info('📋 Request Details: '.$request['_id']);

@@ -5,7 +5,11 @@ namespace App\Providers;
 use App\Services\RequestLogger;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 
 final class EventServiceProvider extends ServiceProvider
 {
@@ -18,6 +22,34 @@ final class EventServiceProvider extends ServiceProvider
                 $query->time
             );
         });
+
+        Queue::before(function (JobProcessing $event) {
+            $this->logQueueEvent('queue_job_started', $event);
+        });
+
+        // Queue job completed
+        Queue::after(function (JobProcessed $event) {
+            $this->logQueueEvent('queue_job_completed', $event);
+        });
+
+        // Queue job failed
+        Queue::failing(function (JobFailed $event) {
+            $this->logQueueEvent('queue_job_failed', $event, [
+                'exception' => $event->exception->getMessage(),
+            ]);
+        });
+    }
+
+    private function logQueueEvent(string $eventName, $event, array $extraData = []): void
+    {
+        $jobData = [
+            'job_id' => $event->job->getJobId(),
+//            'job_class' => get_class($event->job->payload()['data']['command'] ?? 'Unknown'),
+            'queue_name' => $event->job->getQueue(),
+            'attempts' => $event->job->attempts(),
+        ];
+
+        RequestLogger::addEvent($eventName, array_merge($jobData, $extraData));
     }
 
     public function shouldDiscoverEvents(): bool
