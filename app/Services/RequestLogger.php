@@ -27,7 +27,6 @@ class RequestLogger
         self::$requestId = Str::uuid()->toString();
         self::$startTime = microtime(true);
 
-        // Initialize document structure in memory
         self::$requestData = [
             '_id' => self::$requestId,
             'started_at' => new UTCDateTime,
@@ -38,14 +37,12 @@ class RequestLogger
             'user_id' => auth()->id(),
             'input' => request()->except(['password', 'password_confirmation', '_token']),
 
-            // Fields that will be filled later
             'finished_at' => null,
             'status' => null,
             'duration_ms' => null,
             'query_count' => 0,
             'db_time_ms' => 0,
 
-            // Arrays for data collection
             'events' => [],
             'queries' => [],
             'errors' => [],
@@ -91,7 +88,6 @@ class RequestLogger
             'timestamp' => new UTCDateTime,
         ];
 
-        // Update general statistics
         self::$requestData['query_count'] = count(self::$requestData['queries']);
         self::$requestData['db_time_ms'] = round(
             array_sum(array_column(self::$requestData['queries'], 'time_ms')), 2
@@ -117,7 +113,6 @@ class RequestLogger
 
         self::$requestData['errors'][] = $errorData;
 
-        // Debug logging
         if (app()->environment('local')) {
             Log::info('Exception added to RequestLogger', [
                 'request_id' => self::$requestId,
@@ -143,7 +138,6 @@ class RequestLogger
 
         $duration = round((microtime(true) - self::$startTime) * 1000, 2);
 
-        // Fill final data
         self::$requestData['finished_at'] = new UTCDateTime;
         self::$requestData['status'] = $status;
         self::$requestData['duration_ms'] = $duration;
@@ -155,10 +149,8 @@ class RequestLogger
             'db_time_ms' => self::$requestData['db_time_ms'],
         ]);
 
-        // Save to MongoDB
         self::saveToMongo();
 
-        // Clear data for next request
         self::resetData();
     }
 
@@ -192,14 +184,12 @@ class RequestLogger
                     config('database.connections.mongodb.request_tracking_collection')
                 );
 
-            // Insert or update document
             $result = $collection->replaceOne(
                 ['_id' => self::$requestId],
                 self::$requestData,
                 ['upsert' => true]
             );
 
-            // Log successful save (dev only)
             if (app()->environment('local')) {
                 Log::debug('Request saved to MongoDB', [
                     'request_id' => self::$requestId,
@@ -210,11 +200,10 @@ class RequestLogger
             }
 
         } catch (Exception $e) {
-            // If MongoDB is unavailable - log to file as fallback
             Log::error('Failed to save request to MongoDB', [
                 'request_id' => self::$requestId,
                 'error' => $e->getMessage(),
-                'request_data' => self::$requestData, // Save data to file
+                'request_data' => self::$requestData,
             ]);
         }
     }
@@ -232,8 +221,8 @@ class RequestLogger
             }
 
             self::$mongo = new Client($dsn, [
-                'connectTimeoutMS' => 3000,    // 3 seconds timeout
-                'socketTimeoutMS' => 5000,     // 5 seconds for operations
+                'connectTimeoutMS' => 3000,
+                'socketTimeoutMS' => 5000,
             ]);
         }
 

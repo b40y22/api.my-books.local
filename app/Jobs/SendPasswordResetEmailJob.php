@@ -31,13 +31,9 @@ final class SendPasswordResetEmailJob implements ShouldQueue
 
     public function handle(): void
     {
-        // Send the password reset notification
         $this->user->notify(new ResetPasswordNotification($this->token));
     }
 
-    /**
-     * Handle a job failure
-     */
     public function failed(Throwable $exception): void
     {
         Log::error('Failed to send password reset email', [

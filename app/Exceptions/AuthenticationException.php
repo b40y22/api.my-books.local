@@ -18,7 +18,6 @@ final class AuthenticationException extends BaseException
         if ($request->expectsJson()) {
             $requestId = RequestLogger::getRequestId();
 
-            // Log authentication failure details
             RequestLogger::addEvent('[exception] authentication_failed_response', [
                 'guards' => $e->guards(),
                 'intended_url' => $request->fullUrl(),

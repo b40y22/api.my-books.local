@@ -60,7 +60,6 @@ final class User extends Authenticatable implements MustVerifyEmail
 
     public function sendPasswordResetNotification($token): void
     {
-        // Dispatch queued job instead of sending immediately
         dispatch(new SendPasswordResetEmailJob($this, $token));
     }
 }

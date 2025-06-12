@@ -102,7 +102,6 @@ final class MongoRequestAnalyzer extends Command
         $this->info('📋 Request Details: '.$request['_id']);
         $this->newLine();
 
-        // Basic information
         $this->line('<comment>Basic Information:</comment>');
         $this->table(['Field', 'Value'], [
             ['Request ID', $request['_id']],
@@ -119,7 +118,6 @@ final class MongoRequestAnalyzer extends Command
             ['DB Time', ($request['db_time_ms'] ?? 0).' ms'],
         ]);
 
-        // Input data
         if (! empty($request['input'])) {
             $this->newLine();
             $this->line('<comment>Request Input:</comment>');
@@ -127,7 +125,6 @@ final class MongoRequestAnalyzer extends Command
             $this->line(json_encode($input, JSON_PRETTY_PRINT));
         }
 
-        // Events timeline
         if (! empty($request['events'])) {
             $this->newLine();
             $this->line('<comment>Events Timeline:</comment>');
@@ -142,7 +139,6 @@ final class MongoRequestAnalyzer extends Command
             $this->table(['Time', 'Event', 'Data'], $eventData);
         }
 
-        // Database queries
         if (! empty($request['queries'])) {
             $this->newLine();
             $this->line('<comment>Database Queries:</comment>');
@@ -151,12 +147,11 @@ final class MongoRequestAnalyzer extends Command
                 $sql = $query['sql'] ?? 'N/A';
                 $bindings = $query['bindings'] ?? [];
 
-                // Truncate very long values in bindings
                 $formattedBindings = $this->formatBindings($bindings);
 
                 $queryData[] = [
                     $index + 1,
-                    $this->truncateString($sql, 60), // Truncate SQL
+                    $this->truncateString($sql, 60),
                     $formattedBindings,
                     ($query['time_ms'] ?? 0).' ms',
                 ];
@@ -164,7 +159,6 @@ final class MongoRequestAnalyzer extends Command
             $this->table(['#', 'SQL Query', 'Bindings', 'Time'], $queryData);
         }
 
-        // Errors/Exceptions - show only if there are errors
         if (! empty($request['errors'])) {
             $this->newLine();
             $this->line('<comment>Errors/Exceptions:</comment>');
@@ -185,7 +179,6 @@ final class MongoRequestAnalyzer extends Command
             $this->table(['#', 'Exception Class', 'Message', 'Location'], $errorData);
         }
 
-        // Performance summary
         $this->newLine();
         $this->line('<comment>Performance Summary:</comment>');
         $performanceData = [
@@ -198,7 +191,6 @@ final class MongoRequestAnalyzer extends Command
         ];
         $this->table(['Metric', 'Value'], $performanceData);
 
-        // Response analysis
         $status = $request['status'] ?? 0;
         $this->newLine();
         if ($status >= 200 && $status < 300) {
@@ -221,12 +213,10 @@ final class MongoRequestAnalyzer extends Command
             return '-';
         }
 
-        // Convert BSON array to PHP array if needed
         if ($bindings instanceof BSONArray) {
             $bindings = iterator_to_array($bindings);
         }
 
-        // Make sure it's an array
         if (! is_array($bindings)) {
             return json_encode($bindings);
         }
@@ -234,7 +224,6 @@ final class MongoRequestAnalyzer extends Command
         $formatted = [];
         foreach ($bindings as $binding) {
             if (is_string($binding) && strlen($binding) > 50) {
-                // If string is very long (serialized data) - show only beginning
                 $formatted[] = '"'.substr($binding, 0, 30).'..." ('.strlen($binding).' chars)';
             } elseif (is_string($binding)) {
                 $formatted[] = '"'.$binding.'"';
@@ -256,21 +245,16 @@ final class MongoRequestAnalyzer extends Command
 
         $filter = $this->buildFilter();
 
-        // Total requests
         $totalRequests = $collection->countDocuments($filter);
         $this->line("Total Requests: <comment>{$totalRequests}</comment>");
         $this->newLine();
 
-        // Status code distribution
         $this->showStatusDistribution($collection, $filter);
 
-        // HTTP method distribution
         $this->showMethodDistribution($collection, $filter);
 
-        // Performance statistics
         $this->showPerformanceStats($collection, $filter);
 
-        // Error statistics
         $this->showErrorStats($collection, $filter);
 
         return 0;
@@ -543,10 +527,8 @@ final class MongoRequestAnalyzer extends Command
             return '-';
         }
 
-        // Convert BSONDocument to array if needed
         $data = $this->convertBsonToArray($data);
 
-        // Format JSON with indents for better readability
         $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
 
         return $this->truncateString($json, $maxLength);

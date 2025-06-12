@@ -21,39 +21,30 @@ final readonly class LoginService implements LoginServiceInterface
 
     /**
      * Authenticate user with email and password, return token and user data
-     *
-     * @throws AuthenticationException
-     * @throws ValidationException
      */
     public function authenticate(LoginDto $loginDto): array
     {
-        // Find user by email
         $user = $this->userRepository->findByEmail($loginDto->email);
 
         if (! $user) {
             throw new AuthenticationException(__('auth.failed'));
         }
 
-        // Check if email is verified
         if (! $user->hasVerifiedEmail()) {
             throw new ValidationException(__('auth.email_not_verified'));
         }
 
-        // Verify password
         if (! Hash::check($loginDto->password, $user->password)) {
             throw new AuthenticationException(__('auth.failed'));
         }
 
-        // Revoke existing tokens if not using remember me
         if (! $loginDto->remember) {
             $user->tokens()->delete();
         }
 
-        // Create new access token
         $tokenName = $this->generateTokenName();
         $token = $user->createToken($tokenName);
 
-        // Set remember me if requested
         if ($loginDto->remember) {
             Auth::login($user, true);
         }
@@ -63,8 +54,6 @@ final readonly class LoginService implements LoginServiceInterface
 
     /**
      * Logout current user by revoking current access token
-     *
-     * @throws AuthenticationException
      */
     public function logout(): void
     {
@@ -85,8 +74,6 @@ final readonly class LoginService implements LoginServiceInterface
 
     /**
      * Logout user from all devices by revoking all tokens
-     *
-     * @throws AuthenticationException
      */
     public function logoutFromAllDevices(): void
     {
@@ -119,10 +106,8 @@ final readonly class LoginService implements LoginServiceInterface
         $userAgent = request()->userAgent() ?? 'unknown';
         $ip = request()->ip() ?? 'unknown';
 
-        // Create short hash instead of exposing real IP
         $fingerprint = hash('crc32', $userAgent.$ip);
 
-        // Detect device type for better identification
         $deviceType = $this->detectDeviceType($userAgent);
 
         return "{$deviceType}_{$fingerprint}";

@@ -20,7 +20,6 @@ final class LogoutAttemptMiddleware
         $user = Auth::user();
         $currentToken = $user?->currentAccessToken();
 
-        // Log the start of logout attempt
         RequestLogger::addEvent('logout_attempt_started', [
             'user_id' => $user?->id,
             'email' => $user?->email,
@@ -33,10 +32,8 @@ final class LogoutAttemptMiddleware
 
         $response = $next($request);
 
-        // Determine if logout was successful
         $isSuccessful = $response->getStatusCode() === 200;
 
-        // Log the completion of logout attempt
         RequestLogger::addEvent('logout_attempt_completed', [
             'user_id' => $user?->id,
             'email' => $user?->email,
@@ -46,7 +43,6 @@ final class LogoutAttemptMiddleware
             'ip' => $request->ip(),
         ]);
 
-        // Additional logging for failed attempts
         if (! $isSuccessful) {
             RequestLogger::addEvent('logout_failed', [
                 'user_id' => $user?->id,

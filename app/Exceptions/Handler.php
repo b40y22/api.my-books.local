@@ -22,8 +22,6 @@ final class Handler extends ExceptionHandler
 {
     /**
      * The list of the inputs that are never flashed to the session on validation exceptions.
-     *
-     * @var array<int, string>
      */
     protected $dontFlash = [
         'current_password',
@@ -46,12 +44,10 @@ final class Handler extends ExceptionHandler
      */
     public function render($request, Throwable $e): Response
     {
-        // Handle ValidationException specifically for API requests
         if ($e instanceof ValidationException && $request->expectsJson()) {
             return $this->handleValidationException($e, $request);
         }
 
-        // Handle other exceptions with request tracking
         if ($request->expectsJson()) {
             return $this->handleApiException($e, $request);
         }
@@ -65,14 +61,11 @@ final class Handler extends ExceptionHandler
     private function logExceptionToMongo(Throwable $e): void
     {
         try {
-            // Add exception to current request tracking
             RequestLogger::addException($e);
 
-            // Add specific contextual events based on exception type
             $this->addContextualExceptionEvents($e);
 
         } catch (Exception $mongoException) {
-            // Fallback to standard Laravel logging if MongoDB fails
             logger()->error('Failed to log exception to MongoDB', [
                 'original_exception' => [
                     'class' => get_class($e),
@@ -129,7 +122,6 @@ final class Handler extends ExceptionHandler
     {
         $requestId = RequestLogger::getRequestId();
 
-        // Log validation failure details
         RequestLogger::addEvent('validation_response_sent', [
             'error_fields' => array_keys($e->validator->errors()->toArray()),
             'total_errors' => $e->validator->errors()->count(),
@@ -153,21 +145,18 @@ final class Handler extends ExceptionHandler
         $requestId = RequestLogger::getRequestId();
         $statusCode = $this->getStatusCodeFromException($e);
 
-        // Log API error response details
         RequestLogger::addEvent('api_error_response_sent', [
             'exception_class' => get_class($e),
             'status_code' => $statusCode,
             'user_message' => $this->getUserFriendlyMessage($e),
         ]);
 
-        // Different response format based on environment
         $responseData = [
             'data' => [],
             'error' => $this->getUserFriendlyMessage($e),
             'request_id' => $requestId,
         ];
 
-        // Add debug information in non-production environments
         if (! app()->environment('production')) {
             $responseData['debug'] = [
                 'exception' => get_class($e),
@@ -251,7 +240,6 @@ final class Handler extends ExceptionHandler
             return 'A database error occurred. Please try again later.';
         }
 
-        // In production, don't expose internal error messages
         if (app()->environment('production')) {
             return 'An unexpected error occurred. Please try again later.';
         }
@@ -264,10 +252,6 @@ final class Handler extends ExceptionHandler
      */
     public function report(Throwable $e): void
     {
-        // Let parent handle standard Laravel logging
         parent::report($e);
-
-        // Add our custom MongoDB logging
-        // $this->logExceptionToMongo($e);
     }
 }

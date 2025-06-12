@@ -10,19 +10,14 @@ use Throwable;
 
 final class RequestTrackingMiddleware
 {
-    /**
-     * @throws Throwable
-     */
     public function handle(Request $request, Closure $next): Response
     {
         $requestId = RequestLogger::startRequest();
 
-        // Add to request for use in controllers/services
         $request->headers->set('X-Request-ID', $requestId);
 
         $response = $next($request);
 
-        // Add to response for client debugging
         $response->headers->set('X-Request-ID', $requestId);
 
         return $response;

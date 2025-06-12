@@ -18,9 +18,6 @@ final readonly class PasswordResetService implements PasswordResetServiceInterfa
         private UserRepositoryInterface $userRepository
     ) {}
 
-    /**
-     * @throws ValidationException
-     */
     public function sendResetLink(ForgotPasswordDto $forgotPasswordDto): array
     {
         $user = $this->userRepository->findByEmail($forgotPasswordDto->email);
@@ -56,9 +53,6 @@ final readonly class PasswordResetService implements PasswordResetServiceInterfa
         ];
     }
 
-    /**
-     * @throws ValidationException
-     */
     public function resetPassword(ResetPasswordDto $resetPasswordDto): array
     {
         $user = $this->userRepository->findByEmail($resetPasswordDto->email);
@@ -67,7 +61,6 @@ final readonly class PasswordResetService implements PasswordResetServiceInterfa
             throw new ValidationException(__('passwords.user'));
         }
 
-        // Attempt to reset the password
         $status = Password::reset(
             [
                 'email' => $resetPasswordDto->email,
@@ -79,12 +72,10 @@ final readonly class PasswordResetService implements PasswordResetServiceInterfa
                 $user->password = Hash::make($password);
                 $user->save();
 
-                // Revoke all existing tokens for security
                 $user->tokens()->delete();
             }
         );
 
-        // Compare with the correct constant
         if ($status !== Password::PASSWORD_RESET) {
             throw new ValidationException(__($status));
         }

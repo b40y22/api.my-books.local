@@ -27,12 +27,10 @@ final class EventServiceProvider extends ServiceProvider
             $this->logQueueEvent('queue_job_started', $event);
         });
 
-        // Queue job completed
         Queue::after(function (JobProcessed $event) {
             $this->logQueueEvent('queue_job_completed', $event);
         });
 
-        // Queue job failed
         Queue::failing(function (JobFailed $event) {
             $this->logQueueEvent('queue_job_failed', $event, [
                 'exception' => $event->exception->getMessage(),
@@ -44,7 +42,6 @@ final class EventServiceProvider extends ServiceProvider
     {
         $jobData = [
             'job_id' => $event->job->getJobId(),
-//            'job_class' => get_class($event->job->payload()['data']['command'] ?? 'Unknown'),
             'queue_name' => $event->job->getQueue(),
             'attempts' => $event->job->attempts(),
         ];
