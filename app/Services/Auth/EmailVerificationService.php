@@ -36,7 +36,7 @@ final readonly class EmailVerificationService implements EmailVerificationServic
 
         if ($user->hasVerifiedEmail()) {
             return [
-                'message' => 'Email already verified.'
+                'message' => 'Email already verified.',
             ];
         }
 
@@ -47,7 +47,7 @@ final readonly class EmailVerificationService implements EmailVerificationServic
         $user->markEmailAsVerified();
 
         return [
-            'message' => 'Email verified successfully.'
+            'message' => 'Email verified successfully.',
         ];
     }
 
@@ -70,7 +70,7 @@ final readonly class EmailVerificationService implements EmailVerificationServic
         event(new UserRegistered($user));
 
         return [
-            'message' => 'Verification email sent.'
+            'message' => 'Verification email sent.',
         ];
     }
 
@@ -88,7 +88,7 @@ final readonly class EmailVerificationService implements EmailVerificationServic
         $user->sendEmailVerificationNotification();
 
         return [
-            'message' => 'Verification email sent.'
+            'message' => 'Verification email sent.',
         ];
     }
 }

@@ -17,18 +17,15 @@ final class RequestTrackingMiddleware
     {
         $requestId = RequestLogger::startRequest();
 
+        // Add to request for use in controllers/services
         $request->headers->set('X-Request-ID', $requestId);
 
-        try {
-            $response = $next($request);
+        $response = $next($request);
 
-            $response->headers->set('X-Request-ID', $requestId);
+        // Add to response for client debugging
+        $response->headers->set('X-Request-ID', $requestId);
 
-            return $response;
-
-        } catch (Throwable $e) {
-            throw $e;
-        }
+        return $response;
     }
 
     public function terminate(Request $request, Response $response): void
