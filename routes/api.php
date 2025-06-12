@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ResendEmailVerificationController;
+use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Middleware\Auth\LoginAttemptMiddleware;
 use App\Http\Middleware\Auth\LogoutAttemptMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -41,4 +42,8 @@ Route::name('auth.')->prefix('auth')->group(function () {
     Route::post('forgot-password', [ForgotPasswordController::class, '__invoke'])
         ->middleware('throttle:5,1')
         ->name('forgot-password');
+
+    Route::post('reset-password', [ResetPasswordController::class, '__invoke'])
+        ->middleware('throttle:5,1')
+        ->name('reset-password');
 });

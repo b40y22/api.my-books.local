@@ -4,14 +4,12 @@ declare(strict_types=1);
 
 namespace App\Services\Auth;
 
-use App\Exceptions\ValidationException;
 use App\Http\Dto\Request\Auth\ForgotPasswordDto;
+use App\Http\Dto\Request\Auth\ResetPasswordDto;
 
 interface PasswordResetServiceInterface
 {
-    /**
-     * @param ForgotPasswordDto $forgotPasswordDto
-     * @return array
-     */
     public function sendResetLink(ForgotPasswordDto $forgotPasswordDto): array;
+
+    public function resetPassword(ResetPasswordDto $resetPasswordDto): array;
 }

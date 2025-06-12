@@ -33,4 +33,8 @@ return [
     'remember' => [
         'boolean' => 'Remember me must be true or false.',
     ],
+
+    'token' => [
+        'required' => 'Reset token is required.',
+    ],
 ];
