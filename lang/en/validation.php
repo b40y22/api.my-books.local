@@ -7,6 +7,7 @@ return [
         'email' => 'Please provide a valid email address.',
         'unique' => 'This email address is already registered.',
         'exists' => 'This email address is not registered.',
+        'not_found' => 'We could not find a user with that email address.',
     ],
 
     // Password validation

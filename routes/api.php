@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Auth\EmailVerificationController;
+use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
 use App\Http\Controllers\Auth\RegisterController;
@@ -36,4 +37,8 @@ Route::name('auth.')->prefix('auth')->group(function () {
     Route::post('/email/verification-notification', [ResendEmailVerificationController::class, '__invoke'])
         ->middleware(['auth:sanctum', 'throttle:6,1'])
         ->name('verification.resend');
+
+    Route::post('forgot-password', [ForgotPasswordController::class, '__invoke'])
+        ->middleware('throttle:5,1')
+        ->name('forgot-password');
 });
