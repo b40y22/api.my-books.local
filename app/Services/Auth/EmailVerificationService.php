@@ -6,6 +6,7 @@ namespace App\Services\Auth;
 
 use App\Events\Auth\UserRegistered;
 use App\Exceptions\HttpRequestException;
+use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
 use App\Models\User;
 use App\Repositories\Users\UserRepository;
@@ -18,44 +19,41 @@ final readonly class EmailVerificationService implements EmailVerificationServic
     ) {}
 
     /**
+     * @param Request $request
+     * @param int $userId
+     * @param string $hash
+     * @return array
      * @throws HttpRequestException
      * @throws ValidationException
+     * @throws NotFoundException
      */
     public function verifyEmail(Request $request, int $userId, string $hash): array
     {
         if (! $request->hasValidSignature()) {
-            throw new HttpRequestException('The verification link is invalid.');
+            throw new HttpRequestException(__('auth.invalid_verification_link'));
         }
 
-        /** @var User $user */
         $user = $this->userRepository->findOrFail($userId);
 
-        if (! $user) {
-            throw new ValidationException('User not found.');
+        if (! hash_equals($hash, sha1($user->getEmailForVerification()))) {
+            throw new ValidationException(__('auth.invalid_verification_link'));
         }
 
         if ($user->hasVerifiedEmail()) {
             return [
-                'message' => 'Email already verified.',
+                'message' => __('auth.email_already_verified'),
+                'verified' => true
             ];
-        }
-
-        if (! hash_equals($hash, sha1($user->getEmailForVerification()))) {
-            throw new ValidationException('The verification link is invalid.');
         }
 
         $user->markEmailAsVerified();
 
         return [
-            'message' => 'Email verified successfully.',
+            'message' => __('auth.email_verified'),
+            'verified' => true
         ];
     }
 
-    /**
-     * @return string[]
-     *
-     * @throws ValidationException
-     */
     public function resendVerificationEmail(int $userId): array
     {
         /** @var User $user */
@@ -63,7 +61,7 @@ final readonly class EmailVerificationService implements EmailVerificationServic
 
         if ($user->hasVerifiedEmail()) {
             return [
-                'message' => 'Email already verified.',
+                'message' => __('auth.email_already_verified'),
                 'already_verified' => true,
             ];
         }
@@ -73,29 +71,7 @@ final readonly class EmailVerificationService implements EmailVerificationServic
         event(new UserRegistered($user));
 
         return [
-            'message' => 'Verification email sent.',
-        ];
-    }
-
-    /**
-     * @return string[]
-     *
-     * @throws ValidationException
-     */
-    public function resendVerificationEmailForUser($user): array
-    {
-        if ($user->hasVerifiedEmail()) {
-            return [
-                'message' => 'Email already verified.',
-                'already_verified' => true,
-            ];
-        }
-
-        $user->sendEmailVerificationNotification();
-
-        return [
-            'message' => 'Verification email sent.',
-            'already_verified' => false,
+            'message' => __('auth.verification_link_sent'),
         ];
     }
 }
