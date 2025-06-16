@@ -1,61 +1,299 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# My Books Backend API
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+## Огляд проекту
 
-## About Laravel
+Це Laravel-based API для системи управління книгами з повним логуванням життєвого циклу HTTP-запитів та збереженням аналітичних даних у MongoDB.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+## Основні можливості
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+- 🔐 Система автентифікації (реєстрація, логін, відновлення паролю)
+- 📚 API для управління книгами
+- 📊 **Повне логування життєвого циклу запитів з MongoDB**
+- 🔍 Аналіз продуктивності та моніторинг
+- ⚡ Артизанська команда для аналізу запитів
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## Архітектура логування
 
-## Learning Laravel
+### Система відстеження запитів
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+Проект реалізує комплексну систему логування, яка відстежує кожен HTTP-запит від початку до завершення:
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+#### Компоненти системи логування
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+1. **RequestTrackingMiddleware** (`app/Http/Middleware/RequestTrackingMiddleware.php`)
+   - Автоматично відстежує всі HTTP-запити
+   - Генерує унікальний ID для кожного запиту
+   - Додає `X-Request-ID` заголовок до відповіді
 
-## Laravel Sponsors
+2. **RequestLogger Service** (`app/Services/RequestLogger.php`)
+   - Центральний сервіс для збирання даних про запити
+   - Збирає метрики продуктивності
+   - Відстежує SQL-запити та їх час виконання
+   - Логує виключення та помилки
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+3. **MongoServiceProvider** (`app/Providers/MongoServiceProvider.php`)
+   - Налаштовує з'єднання з MongoDB
+   - Створює індекси для оптимальної продуктивності
+   - Автоматично налаштовує TTL для документів (30 днів)
 
-### Premium Partners
+#### Структура даних в MongoDB
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+Кожен запит зберігається як окремий документ із такою структурою:
 
-## Contributing
+```json
+{
+  "_id": "uuid-запиту",
+  "started_at": "2025-06-16T10:30:00.000Z",
+  "finished_at": "2025-06-16T10:30:00.250Z",
+  "method": "POST",
+  "url": "https://api.example.com/auth/login",
+  "status": 200,
+  "duration_ms": 250.75,
+  "ip": "192.168.1.100",
+  "user_agent": "Mozilla/5.0...",
+  "user_id": 123,
+  "input": {
+    "email": "user@example.com"
+  },
+  "query_count": 3,
+  "db_time_ms": 45.2,
+  "queries": [
+    {
+      "sql": "SELECT * FROM users WHERE email = ?",
+      "bindings": ["user@example.com"],
+      "time_ms": 15.3,
+      "timestamp": "2025-06-16T10:30:00.100Z"
+    }
+  ],
+  "events": [
+    {
+      "event": "[middleware] request_started",
+      "timestamp": "2025-06-16T10:30:00.000Z",
+      "data": {
+        "method": "POST",
+        "url": "https://api.example.com/auth/login"
+      }
+    }
+  ],
+  "errors": [
+    {
+      "class": "App\\Exceptions\\ValidationException",
+      "message": "Validation failed",
+      "file": "/app/Http/Requests/LoginRequest.php",
+      "line": 25,
+      "trace": "Stack trace..."
+    }
+  ]
+}
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Можливості аналізу
 
-## Code of Conduct
+#### Артизанська команда `requests:analyze`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Потужна команда для аналізу зібраних даних:
 
-## Security Vulnerabilities
+```bash
+# Аналіз конкретного запиту
+php artisan requests:analyze {request-id}
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Показати статистику
+php artisan requests:analyze --stats
 
-## License
+# Фільтрація по параметрах
+php artisan requests:analyze --user=123 --method=POST --status=500
+php artisan requests:analyze --slow=1000 --errors
+php artisan requests:analyze --from="2025-06-01" --to="2025-06-16"
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# Різні формати виводу
+php artisan requests:analyze --format=json
+php artisan requests:analyze --format=detailed
+```
+
+#### Можливості фільтрації
+
+- **По користувачу**: `--user=ID`
+- **По HTTP методу**: `--method=GET|POST|PUT|DELETE`
+- **По статус коду**: `--status=200|404|500`
+- **По URL**: `--url=pattern`
+- **Повільні запити**: `--slow=1000` (мілісекунди)
+- **Тільки помилки**: `--errors`
+- **Часовий діапазон**: `--from` та `--to`
+
+#### Статистичні звіти
+
+```bash
+php artisan requests:analyze --stats
+```
+
+Показує:
+- Розподіл статус кодів
+- Розподіл HTTP методів
+- Статистику продуктивності
+- Найчастіші помилки
+
+## Налаштування
+
+### Вимоги
+
+- PHP 8.2+
+- Laravel 12.0+
+- MongoDB 4.4+
+- Composer
+
+### Встановлення
+
+1. Клонуйте репозиторій:
+```bash
+git clone <repository-url>
+cd apps/backend
+```
+
+2. Встановіть залежності:
+```bash
+composer install
+npm install
+```
+
+3. Налаштуйте середовище:
+```bash
+cp .env.example .env
+php artisan key:generate
+```
+
+4. Налаштуйте MongoDB у `.env`:
+```env
+MONGODB_DSN=mongodb://localhost:27017
+MONGODB_DATABASE=my_books
+MONGODB_REQUEST_COLLECTION=requests
+```
+
+5. Запустіть міграції:
+```bash
+php artisan migrate
+```
+
+### Конфігурація MongoDB
+
+У `config/database.php` додано конфігурацію для MongoDB:
+
+```php
+'mongodb' => [
+    'dsn' => env('MONGODB_DSN'),
+    'database' => env('MONGODB_DATABASE', 'my_books'),
+    'request_tracking_collection' => env('MONGODB_REQUEST_COLLECTION', 'requests'),
+    'options' => [
+        'connectTimeoutMS' => 3000,
+        'socketTimeoutMS' => 5000,
+    ],
+],
+```
+
+## Розробка
+
+### Запуск проекту
+
+```bash
+# Запуск всіх сервісів (сервер, черга, логи, Vite)
+composer run dev
+
+# Або окремо
+php artisan serve
+php artisan queue:listen
+npm run dev
+```
+
+### Тестування
+
+```bash
+composer run test
+# або
+php artisan test
+```
+
+### Linting
+
+```bash
+./vendor/bin/pint
+```
+
+## Моніторинг та аналітика
+
+### Перевірка доступності MongoDB
+
+```php
+use App\Services\RequestLogger;
+
+if (RequestLogger::isMongoAvailable()) {
+    // MongoDB доступна
+}
+```
+
+### Додавання кастомних подій
+
+```php
+use App\Services\RequestLogger;
+
+RequestLogger::addEvent('user_action', [
+    'action' => 'book_created',
+    'book_id' => $book->id
+]);
+```
+
+### Логування запитів в реальному часі
+
+Всі SQL-запити автоматично логуються за допомогою Laravel DB событій. Кожен запит включає:
+- SQL з прив'язаними параметрами
+- Час виконання
+- Timestamp
+
+## API Endpoints
+
+### Автентифікація
+
+- `POST /api/auth/register` - Реєстрація користувача
+- `POST /api/auth/login` - Авторизація
+- `POST /api/auth/logout` - Вихід
+- `POST /api/auth/forgot-password` - Запит на відновлення паролю
+- `POST /api/auth/reset-password` - Скидання паролю
+- `POST /api/auth/verify-email` - Верифікація email
+
+### Моніторинг
+
+Кожен API-запит автоматично логується та доступний для аналізу через `requests:analyze` команду.
+
+## Безпека
+
+- Паролі не логуються (автоматично виключаються з `input`)
+- MongoDB з'єднання захищене таймаутами
+- TTL для документів (30 днів) для автоматичного очищення
+
+## Індекси MongoDB
+
+Система автоматично створює оптимізовані індекси:
+- `_id` (первинний ключ)
+- `started_at` (сортування за датою)
+- `user_id + started_at` (запити користувача)
+- `status + started_at` (фільтрація за статусом)
+- `duration_ms` (аналіз продуктивності)
+- TTL індекс для автоматичного видалення старих записів
+
+## Технічна реалізація
+
+### Життєвий цикл запиту
+
+1. **Початок запиту** - `RequestTrackingMiddleware` генерує унікальний ID
+2. **Збирання даних** - `RequestLogger` збирає інформацію про запит
+3. **Відстеження SQL** - Автоматичне логування всіх database запитів
+4. **Обробка помилок** - Логування виключень та помилок
+5. **Завершення** - Збереження всіх даних у MongoDB
+
+### Файли конфігурації
+
+- `config/database.php:51-67` - Конфігурація MongoDB підключення
+- `app/Providers/MongoServiceProvider.php:45-66` - Створення індексів
+- `app/Http/Middleware/RequestTrackingMiddleware.php` - Middleware для відстеження
+
+## Ліцензія
+
+MIT License
