@@ -7,19 +7,18 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Tests\Datasets\RegistrationDatasets;
+use Illuminate\Support\Facades\Queue;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
-    // Fake events for testing
-    Illuminate\Support\Facades\Event::fake();
-    // Only fake queues globally, handle events per test
-    Illuminate\Support\Facades\Queue::fake();
+    Event::fake();
+    Queue::fake();
 });
 
 function makeRegistrationRequest(array $data): Illuminate\Testing\TestResponse
 {
-    return test()->postJson('/api/auth/register', $data);
+    return test()->postJson(route('auth.register'), $data);
 }
 
 describe('positive registration tests', function () {
