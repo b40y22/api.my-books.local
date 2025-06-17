@@ -22,7 +22,7 @@ final class RegistrationDatasets
                     'password_confirmation' => 'password123',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The firstname field is required.',
+                'expectedError' => 'First name is required.',
             ],
             'missing firstname' => [
                 'data' => [
@@ -32,7 +32,7 @@ final class RegistrationDatasets
                     'password_confirmation' => 'password123',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The firstname field is required.',
+                'expectedError' => 'First name is required.',
             ],
             'firstname not string' => [
                 'data' => [
@@ -43,7 +43,7 @@ final class RegistrationDatasets
                     'password_confirmation' => 'password123',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The firstname must be a string.',
+                'expectedError' => 'First name must be a valid string.',
             ],
             'lastname not string' => [
                 'data' => [
@@ -54,7 +54,7 @@ final class RegistrationDatasets
                     'password_confirmation' => 'password123',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The lastname must be a string.',
+                'expectedError' => 'Last name must be a valid string.',
             ],
             'empty email' => [
                 'data' => [
@@ -65,7 +65,7 @@ final class RegistrationDatasets
                     'password_confirmation' => 'password123',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The email field is required.',
+                'expectedError' => 'Email address is required.',
             ],
             'missing email' => [
                 'data' => [
@@ -75,7 +75,7 @@ final class RegistrationDatasets
                     'password_confirmation' => 'password123',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The email field is required.',
+                'expectedError' => 'Email address is required.',
             ],
             'invalid email format' => [
                 'data' => [
@@ -86,7 +86,7 @@ final class RegistrationDatasets
                     'password_confirmation' => 'password123',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The email must be a valid email address.',
+                'expectedError' => 'Please provide a valid email address.',
             ],
             'duplicate email' => [
                 'data' => [
@@ -97,7 +97,7 @@ final class RegistrationDatasets
                     'password_confirmation' => 'password123',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The email has already been taken.',
+                'expectedError' => 'This email address is already registered.',
                 'setupUser' => true, // Flag to create existing user
             ],
             'empty password' => [
@@ -109,7 +109,7 @@ final class RegistrationDatasets
                     'password_confirmation' => '',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The password field is required.',
+                'expectedError' => 'Password is required.',
             ],
             'missing password' => [
                 'data' => [
@@ -119,7 +119,7 @@ final class RegistrationDatasets
                     'password_confirmation' => 'password123',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The password field is required.',
+                'expectedError' => 'Password is required.',
             ],
             'password too short' => [
                 'data' => [
@@ -130,7 +130,7 @@ final class RegistrationDatasets
                     'password_confirmation' => '123',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The password must be at least 8 characters.',
+                'expectedError' => 'Password must be at least 8 characters.',
             ],
             'password not string' => [
                 'data' => [
@@ -141,7 +141,7 @@ final class RegistrationDatasets
                     'password_confirmation' => 12345678,
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The password must be a string.',
+                'expectedError' => 'Password must be a valid string.',
             ],
             'password confirmation mismatch' => [
                 'data' => [
@@ -152,7 +152,7 @@ final class RegistrationDatasets
                     'password_confirmation' => 'different123',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The password confirmation does not match.',
+                'expectedError' => 'Password confirmation does not match.',
             ],
             'missing password confirmation' => [
                 'data' => [
@@ -162,7 +162,7 @@ final class RegistrationDatasets
                     'password' => 'password123',
                 ],
                 'expectedStatus' => 422,
-                'expectedError' => 'The password confirmation does not match.',
+                'expectedError' => 'Password confirmation does not match.',
             ],
         ];
     }

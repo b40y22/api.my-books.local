@@ -15,10 +15,6 @@ beforeEach(function () {
     fakeQueues();
 });
 
-// ===================================
-// POSITIVE TESTS
-// ===================================
-
 describe('positive registration tests', function () {
     test('registration with valid data', function (array $data, int $expectedStatus, array $expectedResponse) {
         // Arrange
@@ -66,10 +62,10 @@ describe('positive registration tests', function () {
 
         // Assert
         $response->assertStatus(201);
-        expect($eventFired)->toBeTrue('UserRegistered event should have been fired');
-        expect($capturedUser)->not->toBeNull('Event should contain user data');
-        expect($capturedUser->email)->toBe($uniqueEmail);
-        expect($capturedUser->name)->toBe($expectedName);
+        expect($eventFired)->toBeTrue('UserRegistered event should have been fired')
+            ->and($capturedUser)->not->toBeNull('Event should contain user data')
+            ->and($capturedUser->email)->toBe($uniqueEmail)
+            ->and($capturedUser->name)->toBe($expectedName);
 
     })->with(RegistrationDatasets::eventTestCases());
 
@@ -90,14 +86,11 @@ describe('positive registration tests', function () {
         // Assert
         $response->assertStatus(201);
         $user = User::where('email', $data['email'])->first();
+
         expect(trim($user->name))->toBe($expected);
 
     })->with(RegistrationDatasets::fullNameTestCases());
 });
-
-// ===================================
-// NEGATIVE TESTS
-// ===================================
 
 describe('negative registration tests', function () {
     test('registration with invalid data', function (array $data, int $expectedStatus, string $expectedError, bool $setupUser = false) {
@@ -162,10 +155,6 @@ describe('negative registration tests', function () {
         expect($existingUser->name)->not->toContain('Test User'); // From generateValidRegistrationData
     });
 });
-
-// ===================================
-// RESPONSE STRUCTURE TESTS
-// ===================================
 
 describe('response structure tests', function () {
     test('successful registration response has correct structure', function (array $data, array $expectedKeys, array $excludedKeys) {
@@ -249,8 +238,8 @@ describe('response structure tests', function () {
         $response = makeRegistrationRequest($testData);
 
         // Assert
-        expect($response->json())->toBeApiResponse();
-        expect($response->getStatusCode())->toBe($expectedStatus);
+        expect($response->json())->toBeApiResponse()
+            ->and($response->getStatusCode())->toBe($expectedStatus);
 
     })->with(RegistrationDatasets::consistencyTestCases());
 });
