@@ -6,7 +6,6 @@ use App\Services\RequestLogger;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Throwable;
 
 final class RequestTrackingMiddleware
 {

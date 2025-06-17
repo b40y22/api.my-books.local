@@ -27,7 +27,7 @@ final class ResetPasswordNotification extends Notification
         RequestLogger::addEvent('password_reset_email_generated', [
             'user_id' => $notifiable->id,
             'email' => $notifiable->email,
-            'token_preview' => substr($this->token, 0, 8) . '...',
+            'token_preview' => substr($this->token, 0, 8).'...',
         ]);
 
         $resetUrl = $this->resetUrl($notifiable);

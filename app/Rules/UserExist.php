@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Rules;
 
-use App\Exceptions\ValidationException;
 use App\Models\User;
 use App\Services\RequestLogger;
 use Closure;

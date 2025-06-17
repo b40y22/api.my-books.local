@@ -14,15 +14,13 @@ abstract class AbstractRepository implements AbstractRepositoryInterface
     ) {}
 
     /**
-     * @param int $id
-     * @return Model
      * @throws NotFoundException
      */
     public function findOrFail(int $id): Model
     {
         $model = $this->model->where('id', $id)->first();
 
-        if (!$model) {
+        if (! $model) {
             throw new NotFoundException(__('errors.model_not_found', ['id' => $id]));
         }
 

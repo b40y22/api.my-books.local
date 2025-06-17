@@ -11,15 +11,19 @@ use Tests\Datasets\RegistrationDatasets;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    // Fake events for testing
+    Illuminate\Support\Facades\Event::fake();
     // Only fake queues globally, handle events per test
-    fakeQueues();
+    Illuminate\Support\Facades\Queue::fake();
 });
+
+function makeRegistrationRequest(array $data): Illuminate\Testing\TestResponse
+{
+    return test()->postJson('/api/auth/register', $data);
+}
 
 describe('positive registration tests', function () {
     test('registration with valid data', function (array $data, int $expectedStatus, array $expectedResponse) {
-        // Arrange
-        fakeEvents();
-
         // Act
         $response = makeRegistrationRequest($data);
 
@@ -33,39 +37,40 @@ describe('positive registration tests', function () {
             ->and($response->json('data.email'))->toBe($data['email'])
             ->and($response->json('data.token'))->not->toBeEmpty()
             ->and($response->json('data.token'))->toBeString()
-            ->and($response->json('errors'))->toBeEmpty();
+            ->and($response->json('errors'))->toBeEmpty()
+            ->and(User::where('email', $data['email'])->exists())->toBeTrue();
 
-        // Verify user creation
-        assertDatabaseHasUser($data['email']);
-        assertPasswordIsHashed($data['email'], $data['password']);
+        if (! empty($additionalAttributes)) {
+            $user = User::where('email', $data['email'])->first();
+            foreach ($additionalAttributes as $key => $value) {
+                expect($user->$key)->toBe($value);
+            }
+        }
 
+        $user = User::where('email', $data['email'])->first();
         // Verify security
-        expect($response->json('data'))->not->toHaveKey('password');
+        expect($user)->not->toBeNull()
+            ->and(Illuminate\Support\Facades\Hash::check($data['password'], $user->password))->toBeTrue()
+            ->and($user->password)->not->toBe($data['password'])
+            ->and($response->json('data'))->not->toHaveKey('password');
 
     })->with(RegistrationDatasets::positiveTestCases());
 
     test('registration fires UserRegistered event', function (array $data, string $expectedName) {
-        // Arrange
         $uniqueEmail = 'event.test.'.time().'@example.com';
         $testData = array_merge($data, ['email' => $uniqueEmail]);
-
-        $eventFired = false;
-        $capturedUser = null;
-
-        Event::listen(UserRegistered::class, function ($event) use (&$eventFired, &$capturedUser) {
-            $eventFired = true;
-            $capturedUser = $event->user;
-        });
 
         // Act
         $response = makeRegistrationRequest($testData);
 
         // Assert
         $response->assertStatus(201);
-        expect($eventFired)->toBeTrue('UserRegistered event should have been fired')
-            ->and($capturedUser)->not->toBeNull('Event should contain user data')
-            ->and($capturedUser->email)->toBe($uniqueEmail)
-            ->and($capturedUser->name)->toBe($expectedName);
+
+        // Verify UserRegistered
+        Event::assertDispatched(UserRegistered::class, function ($event) use ($uniqueEmail, $expectedName) {
+            return $event->user->email === $uniqueEmail
+                && $event->user->name === $expectedName;
+        });
 
     })->with(RegistrationDatasets::eventTestCases());
 
@@ -94,9 +99,6 @@ describe('positive registration tests', function () {
 
 describe('negative registration tests', function () {
     test('registration with invalid data', function (array $data, int $expectedStatus, string $expectedError, bool $setupUser = false) {
-        // Arrange
-        fakeEvents();
-
         if ($setupUser && isset($data['email'])) {
             User::factory()->create(['email' => $data['email']]);
         }
@@ -105,12 +107,16 @@ describe('negative registration tests', function () {
         $response = makeRegistrationRequest($data);
 
         // Assert
-        assertValidationError($response, $expectedError);
-        expect($response->getStatusCode())->toBe($expectedStatus);
+        $response->assertStatus(422);
+
+        expect($response->json('errors'))
+            ->toContain($expectedError)
+            ->and($response->json('data'))->toBeEmpty()
+            ->and($response->getStatusCode())->toBe($expectedStatus);
 
         // Verify no user created (except for duplicate email test)
         if (! $setupUser && isset($data['email']) && filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            assertDatabaseMissingUser($data['email']);
+            expect(User::where('email', $data['email'])->exists())->toBeFalse();
         }
 
     })->with(RegistrationDatasets::negativeTestCases());
@@ -119,29 +125,30 @@ describe('negative registration tests', function () {
         // Arrange
         Event::fake();
 
-        $invalidData = [
+        // Act
+        makeRegistrationRequest([
             'firstname' => '', // Invalid
             'email' => 'test@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
-        ];
-
-        // Act
-        makeRegistrationRequest($invalidData);
+        ]);
 
         // Assert
         Event::assertNotDispatched(UserRegistered::class);
     });
 
     test('duplicate email registration maintains database integrity', function () {
-        // Arrange
-        fakeEvents();
-
         $email = 'duplicate.'.time().'@example.com';
         $existingUser = User::factory()->create(['email' => $email]);
         $userCountBefore = User::count();
 
-        $duplicateData = generateValidRegistrationData(['email' => $email]);
+        $duplicateData = array_merge([
+            'firstname' => 'Test',
+            'lastname' => 'User',
+            'email' => 'test.user.'.time().'@example.com',
+            'password' => 'password123',
+            'password_confirmation' => 'password123',
+        ], ['email' => $email]);
 
         // Act
         $response = makeRegistrationRequest($duplicateData);
@@ -152,15 +159,12 @@ describe('negative registration tests', function () {
 
         // Verify original user unchanged
         $existingUser->refresh();
-        expect($existingUser->name)->not->toContain('Test User'); // From generateValidRegistrationData
+        expect($existingUser->name)->not->toContain('Test User');
     });
 });
 
 describe('response structure tests', function () {
     test('successful registration response has correct structure', function (array $data, array $expectedKeys, array $excludedKeys) {
-        // Arrange
-        fakeEvents();
-
         // Act
         $response = makeRegistrationRequest($data);
 
@@ -186,17 +190,12 @@ describe('response structure tests', function () {
     })->with(RegistrationDatasets::structureTestCases());
 
     test('validation error response has correct structure', function () {
-        // Arrange
-        fakeEvents();
-
-        $invalidData = [
+        // Act
+        $response = makeRegistrationRequest([
             'firstname' => '',
             'email' => 'invalid-email',
             'password' => '123',
-        ];
-
-        // Act
-        $response = makeRegistrationRequest($invalidData);
+        ]);
 
         // Assert
         expect($response->json())->toBeValidationErrorResponse();
@@ -207,9 +206,6 @@ describe('response structure tests', function () {
     });
 
     test('response includes request id', function (array $data) {
-        // Arrange
-        fakeEvents();
-
         $testData = array_merge($data, [
             'email' => 'header.test.'.time().'@example.com',
         ]);
@@ -223,9 +219,6 @@ describe('response structure tests', function () {
     })->with(RegistrationDatasets::requestIdTestCases());
 
     test('consistent response format across scenarios', function (array $data, int $expectedStatus) {
-        // Arrange
-        fakeEvents();
-
         if ($expectedStatus === 201) {
             $testData = array_merge($data, [
                 'email' => 'success.'.time().'@example.com',

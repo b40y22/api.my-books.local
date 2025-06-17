@@ -19,10 +19,6 @@ final readonly class EmailVerificationService implements EmailVerificationServic
     ) {}
 
     /**
-     * @param Request $request
-     * @param int $userId
-     * @param string $hash
-     * @return array
      * @throws HttpRequestException
      * @throws ValidationException
      * @throws NotFoundException
@@ -42,7 +38,7 @@ final readonly class EmailVerificationService implements EmailVerificationServic
         if ($user->hasVerifiedEmail()) {
             return [
                 'message' => __('auth.email_already_verified'),
-                'verified' => true
+                'verified' => true,
             ];
         }
 
@@ -50,7 +46,7 @@ final readonly class EmailVerificationService implements EmailVerificationServic
 
         return [
             'message' => __('auth.email_verified'),
-            'verified' => true
+            'verified' => true,
         ];
     }
 
